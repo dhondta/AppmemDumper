@@ -18,6 +18,3 @@ install:
   - git clone https://github.com/volatilityfoundation/volatility vol-setup
   - cd vol-setup && sudo python setup.py install && cd ..
   - sudo pip install pyunpack
-
-script:
-  - sudo cp appmemdumper /usr/bin/
