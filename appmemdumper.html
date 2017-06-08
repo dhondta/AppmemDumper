@@ -1,0 +1,941 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module appmemdumper</title>
+<meta charset="utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>appmemdumper</strong></big></big> (version 1.0)</font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/morfal/Desktop/Fmn/INFO-Y64/Project/analysis/appmemdumper.py">/home/morfal/Desktop/Fmn/INFO-Y64/Project/analysis/appmemdumper.py</a></font></td></tr></table>
+    <p><tt>This&nbsp;self-contained&nbsp;tool&nbsp;automates&nbsp;the&nbsp;research&nbsp;of&nbsp;some&nbsp;artifacts&nbsp;for&nbsp;forensics<br>
+&nbsp;purpose&nbsp;in&nbsp;memory&nbsp;dumps&nbsp;based&nbsp;upon&nbsp;Volatility&nbsp;for&nbsp;a&nbsp;series&nbsp;of&nbsp;common&nbsp;Windows<br>
+&nbsp;applications.<br>
+&nbsp;<br>
+It&nbsp;can&nbsp;also&nbsp;open&nbsp;multiple&nbsp;archive&nbsp;formats.&nbsp;In&nbsp;case&nbsp;of&nbsp;an&nbsp;archive,&nbsp;the&nbsp;tool&nbsp;will<br>
+&nbsp;extract&nbsp;all&nbsp;its&nbsp;files&nbsp;to&nbsp;a&nbsp;temporary&nbsp;directory&nbsp;and&nbsp;then&nbsp;try&nbsp;to&nbsp;open&nbsp;each&nbsp;file<br>
+&nbsp;as&nbsp;a&nbsp;memory&nbsp;dump&nbsp;(except&nbsp;files&nbsp;named&nbsp;README&nbsp;or&nbsp;README.md).<br>
+&nbsp;<br>
+Design&nbsp;principles:<br>
+-&nbsp;maximum&nbsp;use&nbsp;of&nbsp;Python-builtin&nbsp;modules<br>
+-&nbsp;for&nbsp;non-standard&nbsp;imports,&nbsp;trigger&nbsp;exit&nbsp;if&nbsp;not&nbsp;installed&nbsp;and&nbsp;display&nbsp;the<br>
+&nbsp;&nbsp;command&nbsp;for&nbsp;installing&nbsp;these<br>
+-&nbsp;no&nbsp;modularity&nbsp;(principle&nbsp;of&nbsp;self-contained&nbsp;tool)&nbsp;so&nbsp;that&nbsp;it&nbsp;can&nbsp;simply&nbsp;be<br>
+&nbsp;&nbsp;copied&nbsp;in&nbsp;/usr/bin&nbsp;with&nbsp;dependencies&nbsp;other&nbsp;thant&nbsp;the&nbsp;non-standard&nbsp;imports</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="StringIO.html">StringIO</a><br>
+<a href="volatility.addrspace.html">volatility.addrspace</a><br>
+<a href="argparse.html">argparse</a><br>
+<a href="coloredlogs.html">coloredlogs</a><br>
+<a href="volatility.commands.html">volatility.commands</a><br>
+</td><td width="25%" valign=top><a href="volatility.conf.html">volatility.conf</a><br>
+<a href="volatility.constants.html">volatility.constants</a><br>
+<a href="volatility.debug.html">volatility.debug</a><br>
+<a href="logging.html">logging</a><br>
+<a href="volatility.obj.html">volatility.obj</a><br>
+</td><td width="25%" valign=top><a href="os.html">os</a><br>
+<a href="re.html">re</a><br>
+<a href="volatility.registry.html">volatility.registry</a><br>
+<a href="shutil.html">shutil</a><br>
+<a href="signal.html">signal</a><br>
+</td><td width="25%" valign=top><a href="string.html">string</a><br>
+<a href="sys.html">sys</a><br>
+<a href="volatility.utils.html">volatility.utils</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="__builtin__.html#object">__builtin__.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="appmemdumper.html#GenericDumper">GenericDumper</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="appmemdumper.html#AdobeReaderDumper">AdobeReaderDumper</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="appmemdumper.html#FoxitReaderDumper">FoxitReaderDumper</a>
+</font></dt><dt><font face="helvetica, arial"><a href="appmemdumper.html#PDFLiteDumper">PDFLiteDumper</a>
+</font></dt><dt><font face="helvetica, arial"><a href="appmemdumper.html#SumatraPDFDumper">SumatraPDFDumper</a>
+</font></dt></dl>
+</dd>
+<dt><font face="helvetica, arial"><a href="appmemdumper.html#DumpInfoDumper">DumpInfoDumper</a>
+</font></dt><dt><font face="helvetica, arial"><a href="appmemdumper.html#FirefoxDumper">FirefoxDumper</a>
+</font></dt><dt><font face="helvetica, arial"><a href="appmemdumper.html#InternetExplorerDumper">InternetExplorerDumper</a>
+</font></dt><dt><font face="helvetica, arial"><a href="appmemdumper.html#KeePassDumper">KeePassDumper</a>
+</font></dt><dt><font face="helvetica, arial"><a href="appmemdumper.html#MSPaintDumper">MSPaintDumper</a>
+</font></dt><dt><font face="helvetica, arial"><a href="appmemdumper.html#MediaPlayerClassicDumper">MediaPlayerClassicDumper</a>
+</font></dt><dt><font face="helvetica, arial"><a href="appmemdumper.html#NotepadDumper">NotepadDumper</a>
+</font></dt><dt><font face="helvetica, arial"><a href="appmemdumper.html#TrueCryptDumper">TrueCryptDumper</a>
+</font></dt><dt><font face="helvetica, arial"><a href="appmemdumper.html#WordpadDumper">WordpadDumper</a>
+</font></dt></dl>
+</dd>
+<dt><font face="helvetica, arial"><a href="appmemdumper.html#VolatilityMemDump">VolatilityMemDump</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="AdobeReaderDumper">class <strong>AdobeReaderDumper</strong></a>(<a href="appmemdumper.html#GenericDumper">GenericDumper</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Dumper&nbsp;for&nbsp;the&nbsp;well-known&nbsp;application&nbsp;Adobe&nbsp;Reader.&nbsp;It&nbsp;uses&nbsp;the&nbsp;'<a href="#AdobeReaderDumper-run">run</a>()'<br>
+&nbsp;method&nbsp;of&nbsp;<a href="#GenericDumper">GenericDumper</a>&nbsp;to&nbsp;extract&nbsp;the&nbsp;memory&nbsp;of&nbsp;the&nbsp;process&nbsp;and&nbsp;carves&nbsp;PDF<br>
+&nbsp;files&nbsp;on&nbsp;it&nbsp;with&nbsp;Foremost&nbsp;then&nbsp;removes&nbsp;the&nbsp;memory&nbsp;dump.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="appmemdumper.html#AdobeReaderDumper">AdobeReaderDumper</a></dd>
+<dd><a href="appmemdumper.html#GenericDumper">GenericDumper</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="AdobeReaderDumper-run"><strong>run</strong></a>(self)</dt><dd><tt>Executes&nbsp;the&nbsp;'memdump'&nbsp;Volatility&nbsp;command&nbsp;(<a href="#GenericDumper">GenericDumper</a>),&nbsp;carves&nbsp;PDF<br>
+&nbsp;files&nbsp;with&nbsp;Foremost&nbsp;then&nbsp;removes&nbsp;the&nbsp;process&nbsp;memory&nbsp;dump.</tt></dd></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>procnames</strong> = ['reader.exe', 'AcroRd32.exe']</dl>
+
+<hr>
+Methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="AdobeReaderDumper-__init__"><strong>__init__</strong></a>(self, dump, name, pids)</dt><dd><tt>Simple&nbsp;constructor&nbsp;for&nbsp;setting&nbsp;base&nbsp;attributes.<br>
+&nbsp;<br>
+:param&nbsp;dump:&nbsp;<a href="#VolatilityMemDump">VolatilityMemDump</a>&nbsp;instance<br>
+:param&nbsp;name:&nbsp;application&nbsp;name<br>
+:param&nbsp;pids:&nbsp;list&nbsp;of&nbsp;pids&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;application&nbsp;name&nbsp;in&nbsp;dump</tt></dd></dl>
+
+<dl><dt><a name="AdobeReaderDumper-carve"><strong>carve</strong></a>(self, filepath, types<font color="#909090">=()</font>, clean<font color="#909090">=False</font>)</dt><dd><tt>Carve&nbsp;files&nbsp;of&nbsp;given&nbsp;types&nbsp;from&nbsp;the&nbsp;input&nbsp;resource&nbsp;with&nbsp;Foremost.<br>
+&nbsp;<br>
+:param&nbsp;filepath:&nbsp;file&nbsp;path&nbsp;of&nbsp;the&nbsp;resource&nbsp;to&nbsp;be&nbsp;carved<br>
+:param&nbsp;types:&nbsp;list&nbsp;of&nbsp;extensions&nbsp;to&nbsp;be&nbsp;carved&nbsp;from&nbsp;the&nbsp;resource</tt></dd></dl>
+
+<hr>
+Static methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="AdobeReaderDumper-reduce_text"><strong>reduce_text</strong></a>(text, alphabet<font color="#909090">='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&amp;<font color="#c040c0">\'</font>()*+,-./:;&lt;=&gt;?@[<font color="#c040c0">\\</font>]^_`{|}~ <font color="#c040c0">\t\n\r\x0b\x0c</font>'</font>, wsize<font color="#909090">=5</font>, threshold<font color="#909090">=3</font>)</dt><dd><tt>Determines&nbsp;start|end&nbsp;bounds&nbsp;based&nbsp;on&nbsp;a&nbsp;window&nbsp;of&nbsp;booleans&nbsp;telling&nbsp;if&nbsp;the<br>
+&nbsp;characters&nbsp;are&nbsp;well&nbsp;in&nbsp;the&nbsp;allowed&nbsp;alphabet&nbsp;with&nbsp;the&nbsp;constraints&nbsp;that<br>
+&nbsp;the&nbsp;first&nbsp;character&nbsp;in&nbsp;the&nbsp;window&nbsp;must&nbsp;be&nbsp;a&nbsp;not-allowed&nbsp;one&nbsp;and&nbsp;the<br>
+&nbsp;number&nbsp;of&nbsp;not-allowed&nbsp;ones&nbsp;in&nbsp;the&nbsp;window&nbsp;is&nbsp;above&nbsp;the&nbsp;threshold</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>messages</strong> = []</dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="DumpInfoDumper">class <strong>DumpInfoDumper</strong></a>(<a href="appmemdumper.html#GenericDumper">GenericDumper</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Dumper&nbsp;of&nbsp;general&nbsp;information&nbsp;about&nbsp;the&nbsp;memory&nbsp;image.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="appmemdumper.html#DumpInfoDumper">DumpInfoDumper</a></dd>
+<dd><a href="appmemdumper.html#GenericDumper">GenericDumper</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="DumpInfoDumper-run"><strong>run</strong></a>(self)</dt><dd><tt>Executes&nbsp;a&nbsp;series&nbsp;of&nbsp;informational&nbsp;Volatility&nbsp;commands.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="DumpInfoDumper-__init__"><strong>__init__</strong></a>(self, dump, name, pids)</dt><dd><tt>Simple&nbsp;constructor&nbsp;for&nbsp;setting&nbsp;base&nbsp;attributes.<br>
+&nbsp;<br>
+:param&nbsp;dump:&nbsp;<a href="#VolatilityMemDump">VolatilityMemDump</a>&nbsp;instance<br>
+:param&nbsp;name:&nbsp;application&nbsp;name<br>
+:param&nbsp;pids:&nbsp;list&nbsp;of&nbsp;pids&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;application&nbsp;name&nbsp;in&nbsp;dump</tt></dd></dl>
+
+<dl><dt><a name="DumpInfoDumper-carve"><strong>carve</strong></a>(self, filepath, types<font color="#909090">=()</font>, clean<font color="#909090">=False</font>)</dt><dd><tt>Carve&nbsp;files&nbsp;of&nbsp;given&nbsp;types&nbsp;from&nbsp;the&nbsp;input&nbsp;resource&nbsp;with&nbsp;Foremost.<br>
+&nbsp;<br>
+:param&nbsp;filepath:&nbsp;file&nbsp;path&nbsp;of&nbsp;the&nbsp;resource&nbsp;to&nbsp;be&nbsp;carved<br>
+:param&nbsp;types:&nbsp;list&nbsp;of&nbsp;extensions&nbsp;to&nbsp;be&nbsp;carved&nbsp;from&nbsp;the&nbsp;resource</tt></dd></dl>
+
+<hr>
+Static methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="DumpInfoDumper-reduce_text"><strong>reduce_text</strong></a>(text, alphabet<font color="#909090">='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&amp;<font color="#c040c0">\'</font>()*+,-./:;&lt;=&gt;?@[<font color="#c040c0">\\</font>]^_`{|}~ <font color="#c040c0">\t\n\r\x0b\x0c</font>'</font>, wsize<font color="#909090">=5</font>, threshold<font color="#909090">=3</font>)</dt><dd><tt>Determines&nbsp;start|end&nbsp;bounds&nbsp;based&nbsp;on&nbsp;a&nbsp;window&nbsp;of&nbsp;booleans&nbsp;telling&nbsp;if&nbsp;the<br>
+&nbsp;characters&nbsp;are&nbsp;well&nbsp;in&nbsp;the&nbsp;allowed&nbsp;alphabet&nbsp;with&nbsp;the&nbsp;constraints&nbsp;that<br>
+&nbsp;the&nbsp;first&nbsp;character&nbsp;in&nbsp;the&nbsp;window&nbsp;must&nbsp;be&nbsp;a&nbsp;not-allowed&nbsp;one&nbsp;and&nbsp;the<br>
+&nbsp;number&nbsp;of&nbsp;not-allowed&nbsp;ones&nbsp;in&nbsp;the&nbsp;window&nbsp;is&nbsp;above&nbsp;the&nbsp;threshold</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>messages</strong> = []</dl>
+
+<dl><dt><strong>procnames</strong> = None</dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="FirefoxDumper">class <strong>FirefoxDumper</strong></a>(<a href="appmemdumper.html#GenericDumper">GenericDumper</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Dumper&nbsp;for&nbsp;the&nbsp;common&nbsp;application&nbsp;Mozilla&nbsp;Firefox.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="appmemdumper.html#FirefoxDumper">FirefoxDumper</a></dd>
+<dd><a href="appmemdumper.html#GenericDumper">GenericDumper</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="FirefoxDumper-run"><strong>run</strong></a>(self)</dt></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>procnames</strong> = ['firefox.exe']</dl>
+
+<hr>
+Methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="FirefoxDumper-__init__"><strong>__init__</strong></a>(self, dump, name, pids)</dt><dd><tt>Simple&nbsp;constructor&nbsp;for&nbsp;setting&nbsp;base&nbsp;attributes.<br>
+&nbsp;<br>
+:param&nbsp;dump:&nbsp;<a href="#VolatilityMemDump">VolatilityMemDump</a>&nbsp;instance<br>
+:param&nbsp;name:&nbsp;application&nbsp;name<br>
+:param&nbsp;pids:&nbsp;list&nbsp;of&nbsp;pids&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;application&nbsp;name&nbsp;in&nbsp;dump</tt></dd></dl>
+
+<dl><dt><a name="FirefoxDumper-carve"><strong>carve</strong></a>(self, filepath, types<font color="#909090">=()</font>, clean<font color="#909090">=False</font>)</dt><dd><tt>Carve&nbsp;files&nbsp;of&nbsp;given&nbsp;types&nbsp;from&nbsp;the&nbsp;input&nbsp;resource&nbsp;with&nbsp;Foremost.<br>
+&nbsp;<br>
+:param&nbsp;filepath:&nbsp;file&nbsp;path&nbsp;of&nbsp;the&nbsp;resource&nbsp;to&nbsp;be&nbsp;carved<br>
+:param&nbsp;types:&nbsp;list&nbsp;of&nbsp;extensions&nbsp;to&nbsp;be&nbsp;carved&nbsp;from&nbsp;the&nbsp;resource</tt></dd></dl>
+
+<hr>
+Static methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="FirefoxDumper-reduce_text"><strong>reduce_text</strong></a>(text, alphabet<font color="#909090">='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&amp;<font color="#c040c0">\'</font>()*+,-./:;&lt;=&gt;?@[<font color="#c040c0">\\</font>]^_`{|}~ <font color="#c040c0">\t\n\r\x0b\x0c</font>'</font>, wsize<font color="#909090">=5</font>, threshold<font color="#909090">=3</font>)</dt><dd><tt>Determines&nbsp;start|end&nbsp;bounds&nbsp;based&nbsp;on&nbsp;a&nbsp;window&nbsp;of&nbsp;booleans&nbsp;telling&nbsp;if&nbsp;the<br>
+&nbsp;characters&nbsp;are&nbsp;well&nbsp;in&nbsp;the&nbsp;allowed&nbsp;alphabet&nbsp;with&nbsp;the&nbsp;constraints&nbsp;that<br>
+&nbsp;the&nbsp;first&nbsp;character&nbsp;in&nbsp;the&nbsp;window&nbsp;must&nbsp;be&nbsp;a&nbsp;not-allowed&nbsp;one&nbsp;and&nbsp;the<br>
+&nbsp;number&nbsp;of&nbsp;not-allowed&nbsp;ones&nbsp;in&nbsp;the&nbsp;window&nbsp;is&nbsp;above&nbsp;the&nbsp;threshold</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>messages</strong> = []</dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="FoxitReaderDumper">class <strong>FoxitReaderDumper</strong></a>(<a href="appmemdumper.html#AdobeReaderDumper">AdobeReaderDumper</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Dumper&nbsp;for&nbsp;the&nbsp;common&nbsp;application&nbsp;Foxit&nbsp;Reader.&nbsp;It&nbsp;performs&nbsp;the&nbsp;same<br>
+&nbsp;operations&nbsp;as&nbsp;<a href="#AdobeReaderDumper">AdobeReaderDumper</a>.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="appmemdumper.html#FoxitReaderDumper">FoxitReaderDumper</a></dd>
+<dd><a href="appmemdumper.html#AdobeReaderDumper">AdobeReaderDumper</a></dd>
+<dd><a href="appmemdumper.html#GenericDumper">GenericDumper</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>procnames</strong> = ['FoxitReader.ex', 'FoxitReader.exe']</dl>
+
+<hr>
+Methods inherited from <a href="appmemdumper.html#AdobeReaderDumper">AdobeReaderDumper</a>:<br>
+<dl><dt><a name="FoxitReaderDumper-run"><strong>run</strong></a>(self)</dt><dd><tt>Executes&nbsp;the&nbsp;'memdump'&nbsp;Volatility&nbsp;command&nbsp;(<a href="#GenericDumper">GenericDumper</a>),&nbsp;carves&nbsp;PDF<br>
+&nbsp;files&nbsp;with&nbsp;Foremost&nbsp;then&nbsp;removes&nbsp;the&nbsp;process&nbsp;memory&nbsp;dump.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="FoxitReaderDumper-__init__"><strong>__init__</strong></a>(self, dump, name, pids)</dt><dd><tt>Simple&nbsp;constructor&nbsp;for&nbsp;setting&nbsp;base&nbsp;attributes.<br>
+&nbsp;<br>
+:param&nbsp;dump:&nbsp;<a href="#VolatilityMemDump">VolatilityMemDump</a>&nbsp;instance<br>
+:param&nbsp;name:&nbsp;application&nbsp;name<br>
+:param&nbsp;pids:&nbsp;list&nbsp;of&nbsp;pids&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;application&nbsp;name&nbsp;in&nbsp;dump</tt></dd></dl>
+
+<dl><dt><a name="FoxitReaderDumper-carve"><strong>carve</strong></a>(self, filepath, types<font color="#909090">=()</font>, clean<font color="#909090">=False</font>)</dt><dd><tt>Carve&nbsp;files&nbsp;of&nbsp;given&nbsp;types&nbsp;from&nbsp;the&nbsp;input&nbsp;resource&nbsp;with&nbsp;Foremost.<br>
+&nbsp;<br>
+:param&nbsp;filepath:&nbsp;file&nbsp;path&nbsp;of&nbsp;the&nbsp;resource&nbsp;to&nbsp;be&nbsp;carved<br>
+:param&nbsp;types:&nbsp;list&nbsp;of&nbsp;extensions&nbsp;to&nbsp;be&nbsp;carved&nbsp;from&nbsp;the&nbsp;resource</tt></dd></dl>
+
+<hr>
+Static methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="FoxitReaderDumper-reduce_text"><strong>reduce_text</strong></a>(text, alphabet<font color="#909090">='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&amp;<font color="#c040c0">\'</font>()*+,-./:;&lt;=&gt;?@[<font color="#c040c0">\\</font>]^_`{|}~ <font color="#c040c0">\t\n\r\x0b\x0c</font>'</font>, wsize<font color="#909090">=5</font>, threshold<font color="#909090">=3</font>)</dt><dd><tt>Determines&nbsp;start|end&nbsp;bounds&nbsp;based&nbsp;on&nbsp;a&nbsp;window&nbsp;of&nbsp;booleans&nbsp;telling&nbsp;if&nbsp;the<br>
+&nbsp;characters&nbsp;are&nbsp;well&nbsp;in&nbsp;the&nbsp;allowed&nbsp;alphabet&nbsp;with&nbsp;the&nbsp;constraints&nbsp;that<br>
+&nbsp;the&nbsp;first&nbsp;character&nbsp;in&nbsp;the&nbsp;window&nbsp;must&nbsp;be&nbsp;a&nbsp;not-allowed&nbsp;one&nbsp;and&nbsp;the<br>
+&nbsp;number&nbsp;of&nbsp;not-allowed&nbsp;ones&nbsp;in&nbsp;the&nbsp;window&nbsp;is&nbsp;above&nbsp;the&nbsp;threshold</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>messages</strong> = []</dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="GenericDumper">class <strong>GenericDumper</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Generic&nbsp;dumper&nbsp;class&nbsp;for&nbsp;handling&nbsp;base&nbsp;operations&nbsp;on&nbsp;the&nbsp;memory&nbsp;dump&nbsp;for<br>
+&nbsp;handled&nbsp;applications.&nbsp;It&nbsp;can&nbsp;execute&nbsp;Volatility&nbsp;commands&nbsp;using&nbsp;the&nbsp;attached<br>
+&nbsp;<a href="#VolatilityMemDump">VolatilityMemDump</a>&nbsp;instance&nbsp;and&nbsp;carve&nbsp;files&nbsp;using&nbsp;Foremost.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="GenericDumper-__init__"><strong>__init__</strong></a>(self, dump, name, pids)</dt><dd><tt>Simple&nbsp;constructor&nbsp;for&nbsp;setting&nbsp;base&nbsp;attributes.<br>
+&nbsp;<br>
+:param&nbsp;dump:&nbsp;<a href="#VolatilityMemDump">VolatilityMemDump</a>&nbsp;instance<br>
+:param&nbsp;name:&nbsp;application&nbsp;name<br>
+:param&nbsp;pids:&nbsp;list&nbsp;of&nbsp;pids&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;application&nbsp;name&nbsp;in&nbsp;dump</tt></dd></dl>
+
+<dl><dt><a name="GenericDumper-carve"><strong>carve</strong></a>(self, filepath, types<font color="#909090">=()</font>, clean<font color="#909090">=False</font>)</dt><dd><tt>Carve&nbsp;files&nbsp;of&nbsp;given&nbsp;types&nbsp;from&nbsp;the&nbsp;input&nbsp;resource&nbsp;with&nbsp;Foremost.<br>
+&nbsp;<br>
+:param&nbsp;filepath:&nbsp;file&nbsp;path&nbsp;of&nbsp;the&nbsp;resource&nbsp;to&nbsp;be&nbsp;carved<br>
+:param&nbsp;types:&nbsp;list&nbsp;of&nbsp;extensions&nbsp;to&nbsp;be&nbsp;carved&nbsp;from&nbsp;the&nbsp;resource</tt></dd></dl>
+
+<dl><dt><a name="GenericDumper-run"><strong>run</strong></a>(self)</dt><dd><tt>Executes&nbsp;the&nbsp;'memdump'&nbsp;Volatility&nbsp;command&nbsp;for&nbsp;extracting&nbsp;the&nbsp;related<br>
+&nbsp;process&nbsp;memory.<br>
+Public&nbsp;run&nbsp;method&nbsp;to&nbsp;be&nbsp;overridden&nbsp;for&nbsp;the&nbsp;operations&nbsp;to&nbsp;be&nbsp;applied&nbsp;to<br>
+&nbsp;the&nbsp;related&nbsp;application.<br>
+&nbsp;<br>
+:param&nbsp;verbose:&nbsp;display&nbsp;the&nbsp;log&nbsp;message&nbsp;after&nbsp;saving&nbsp;the&nbsp;memory&nbsp;dump</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="GenericDumper-reduce_text"><strong>reduce_text</strong></a>(text, alphabet<font color="#909090">='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&amp;<font color="#c040c0">\'</font>()*+,-./:;&lt;=&gt;?@[<font color="#c040c0">\\</font>]^_`{|}~ <font color="#c040c0">\t\n\r\x0b\x0c</font>'</font>, wsize<font color="#909090">=5</font>, threshold<font color="#909090">=3</font>)</dt><dd><tt>Determines&nbsp;start|end&nbsp;bounds&nbsp;based&nbsp;on&nbsp;a&nbsp;window&nbsp;of&nbsp;booleans&nbsp;telling&nbsp;if&nbsp;the<br>
+&nbsp;characters&nbsp;are&nbsp;well&nbsp;in&nbsp;the&nbsp;allowed&nbsp;alphabet&nbsp;with&nbsp;the&nbsp;constraints&nbsp;that<br>
+&nbsp;the&nbsp;first&nbsp;character&nbsp;in&nbsp;the&nbsp;window&nbsp;must&nbsp;be&nbsp;a&nbsp;not-allowed&nbsp;one&nbsp;and&nbsp;the<br>
+&nbsp;number&nbsp;of&nbsp;not-allowed&nbsp;ones&nbsp;in&nbsp;the&nbsp;window&nbsp;is&nbsp;above&nbsp;the&nbsp;threshold</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>messages</strong> = []</dl>
+
+<dl><dt><strong>procnames</strong> = None</dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="InternetExplorerDumper">class <strong>InternetExplorerDumper</strong></a>(<a href="appmemdumper.html#GenericDumper">GenericDumper</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Dumper&nbsp;for&nbsp;the&nbsp;common&nbsp;application&nbsp;Microsoft&nbsp;Internet&nbsp;Explorer.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="appmemdumper.html#InternetExplorerDumper">InternetExplorerDumper</a></dd>
+<dd><a href="appmemdumper.html#GenericDumper">GenericDumper</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="InternetExplorerDumper-run"><strong>run</strong></a>(self)</dt></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>procnames</strong> = ['iexplore.exe']</dl>
+
+<hr>
+Methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="InternetExplorerDumper-__init__"><strong>__init__</strong></a>(self, dump, name, pids)</dt><dd><tt>Simple&nbsp;constructor&nbsp;for&nbsp;setting&nbsp;base&nbsp;attributes.<br>
+&nbsp;<br>
+:param&nbsp;dump:&nbsp;<a href="#VolatilityMemDump">VolatilityMemDump</a>&nbsp;instance<br>
+:param&nbsp;name:&nbsp;application&nbsp;name<br>
+:param&nbsp;pids:&nbsp;list&nbsp;of&nbsp;pids&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;application&nbsp;name&nbsp;in&nbsp;dump</tt></dd></dl>
+
+<dl><dt><a name="InternetExplorerDumper-carve"><strong>carve</strong></a>(self, filepath, types<font color="#909090">=()</font>, clean<font color="#909090">=False</font>)</dt><dd><tt>Carve&nbsp;files&nbsp;of&nbsp;given&nbsp;types&nbsp;from&nbsp;the&nbsp;input&nbsp;resource&nbsp;with&nbsp;Foremost.<br>
+&nbsp;<br>
+:param&nbsp;filepath:&nbsp;file&nbsp;path&nbsp;of&nbsp;the&nbsp;resource&nbsp;to&nbsp;be&nbsp;carved<br>
+:param&nbsp;types:&nbsp;list&nbsp;of&nbsp;extensions&nbsp;to&nbsp;be&nbsp;carved&nbsp;from&nbsp;the&nbsp;resource</tt></dd></dl>
+
+<hr>
+Static methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="InternetExplorerDumper-reduce_text"><strong>reduce_text</strong></a>(text, alphabet<font color="#909090">='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&amp;<font color="#c040c0">\'</font>()*+,-./:;&lt;=&gt;?@[<font color="#c040c0">\\</font>]^_`{|}~ <font color="#c040c0">\t\n\r\x0b\x0c</font>'</font>, wsize<font color="#909090">=5</font>, threshold<font color="#909090">=3</font>)</dt><dd><tt>Determines&nbsp;start|end&nbsp;bounds&nbsp;based&nbsp;on&nbsp;a&nbsp;window&nbsp;of&nbsp;booleans&nbsp;telling&nbsp;if&nbsp;the<br>
+&nbsp;characters&nbsp;are&nbsp;well&nbsp;in&nbsp;the&nbsp;allowed&nbsp;alphabet&nbsp;with&nbsp;the&nbsp;constraints&nbsp;that<br>
+&nbsp;the&nbsp;first&nbsp;character&nbsp;in&nbsp;the&nbsp;window&nbsp;must&nbsp;be&nbsp;a&nbsp;not-allowed&nbsp;one&nbsp;and&nbsp;the<br>
+&nbsp;number&nbsp;of&nbsp;not-allowed&nbsp;ones&nbsp;in&nbsp;the&nbsp;window&nbsp;is&nbsp;above&nbsp;the&nbsp;threshold</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>messages</strong> = []</dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="KeePassDumper">class <strong>KeePassDumper</strong></a>(<a href="appmemdumper.html#GenericDumper">GenericDumper</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Dumper&nbsp;for&nbsp;the&nbsp;common&nbsp;application&nbsp;KeePass.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="appmemdumper.html#KeePassDumper">KeePassDumper</a></dd>
+<dd><a href="appmemdumper.html#GenericDumper">GenericDumper</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="KeePassDumper-run"><strong>run</strong></a>(self)</dt><dd><tt>Executes&nbsp;the&nbsp;'memdump'&nbsp;Volatility&nbsp;command&nbsp;(<a href="#GenericDumper">GenericDumper</a>),&nbsp;retrieves<br>
+&nbsp;some&nbsp;XML&nbsp;content,&nbsp;then&nbsp;executes&nbsp;the&nbsp;'vaddump'&nbsp;Volatility&nbsp;command&nbsp;and<br>
+&nbsp;finally&nbsp;gets&nbsp;the&nbsp;KeePass&nbsp;DB&nbsp;from&nbsp;the&nbsp;VAD&nbsp;nodes.</tt></dd></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>fmt_patterns</strong> = [('<font color="#c040c0">\x03\xd9\xa2\x9a</font>e<font color="#c040c0">\xfb</font>K<font color="#c040c0">\xb5</font>', '<font color="#c040c0">\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00</font>', 'kdb'), ('<font color="#c040c0">\x03\xd9\xa2\x9a</font>f<font color="#c040c0">\xfb</font>K<font color="#c040c0">\xb5</font>', '<font color="#c040c0">\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00</font>', 'kdbx'), ('<font color="#c040c0">\x03\xd9\xa2\x9a</font>g<font color="#c040c0">\xfb</font>K<font color="#c040c0">\xb5</font>', '<font color="#c040c0">\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00</font>', 'kdbx')]</dl>
+
+<dl><dt><strong>messages</strong> = ["If the KeePass database was used with a master p...epass2john'<font color="#c040c0">\n</font>2. It can then be cracked with 'john'"]</dl>
+
+<dl><dt><strong>procnames</strong> = ['KeePass.exe', 'KeePassX.exe', 'PassKeep.exe']</dl>
+
+<dl><dt><strong>re_patterns</strong> = [('(&lt;<font color="#c040c0">\\</font>?xml(<font color="#c040c0">\\</font>s[a-z0-9<font color="#c040c0">\\</font>=<font color="#c040c0">\\</font>-<font color="#c040c0">\\</font>"<font color="#c040c0">\\\'\\</font>._]+)+<font color="#c040c0">\\</font>?&gt;<font color="#c040c0">\\</font>r?<font color="#c040c0">\\</font>n&lt;KeePassFile&gt;(.*?)&lt;<font color="#c040c0">\\</font>/KeePassFile&gt;)', 'xml', 'file'), ('(&lt;<font color="#c040c0">\\</font>?xml(<font color="#c040c0">\\</font>s[a-zA-Z0-9<font color="#c040c0">\\</font>=<font color="#c040c0">\\</font>-<font color="#c040c0">\\</font>"<font color="#c040c0">\\\'\\</font>.<font color="#c040c0">\\</font>:<font color="#c040c0">\\</font>/_]+)+<font color="#c040c0">\\</font>?&gt;<font color="#c040c0">\\</font>r?<font color="#c040c0">\\</font>n&lt;...-zA-Z0-9<font color="#c040c0">\\</font>=<font color="#c040c0">\\</font>-"<font color="#c040c0">\'\\</font>.<font color="#c040c0">\\</font>:<font color="#c040c0">\\</font>/_]+)+&gt;(.*?)&lt;<font color="#c040c0">\\</font>/ArrayOfString&gt;)', 'xml', 'path')]</dl>
+
+<hr>
+Methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="KeePassDumper-__init__"><strong>__init__</strong></a>(self, dump, name, pids)</dt><dd><tt>Simple&nbsp;constructor&nbsp;for&nbsp;setting&nbsp;base&nbsp;attributes.<br>
+&nbsp;<br>
+:param&nbsp;dump:&nbsp;<a href="#VolatilityMemDump">VolatilityMemDump</a>&nbsp;instance<br>
+:param&nbsp;name:&nbsp;application&nbsp;name<br>
+:param&nbsp;pids:&nbsp;list&nbsp;of&nbsp;pids&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;application&nbsp;name&nbsp;in&nbsp;dump</tt></dd></dl>
+
+<dl><dt><a name="KeePassDumper-carve"><strong>carve</strong></a>(self, filepath, types<font color="#909090">=()</font>, clean<font color="#909090">=False</font>)</dt><dd><tt>Carve&nbsp;files&nbsp;of&nbsp;given&nbsp;types&nbsp;from&nbsp;the&nbsp;input&nbsp;resource&nbsp;with&nbsp;Foremost.<br>
+&nbsp;<br>
+:param&nbsp;filepath:&nbsp;file&nbsp;path&nbsp;of&nbsp;the&nbsp;resource&nbsp;to&nbsp;be&nbsp;carved<br>
+:param&nbsp;types:&nbsp;list&nbsp;of&nbsp;extensions&nbsp;to&nbsp;be&nbsp;carved&nbsp;from&nbsp;the&nbsp;resource</tt></dd></dl>
+
+<hr>
+Static methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="KeePassDumper-reduce_text"><strong>reduce_text</strong></a>(text, alphabet<font color="#909090">='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&amp;<font color="#c040c0">\'</font>()*+,-./:;&lt;=&gt;?@[<font color="#c040c0">\\</font>]^_`{|}~ <font color="#c040c0">\t\n\r\x0b\x0c</font>'</font>, wsize<font color="#909090">=5</font>, threshold<font color="#909090">=3</font>)</dt><dd><tt>Determines&nbsp;start|end&nbsp;bounds&nbsp;based&nbsp;on&nbsp;a&nbsp;window&nbsp;of&nbsp;booleans&nbsp;telling&nbsp;if&nbsp;the<br>
+&nbsp;characters&nbsp;are&nbsp;well&nbsp;in&nbsp;the&nbsp;allowed&nbsp;alphabet&nbsp;with&nbsp;the&nbsp;constraints&nbsp;that<br>
+&nbsp;the&nbsp;first&nbsp;character&nbsp;in&nbsp;the&nbsp;window&nbsp;must&nbsp;be&nbsp;a&nbsp;not-allowed&nbsp;one&nbsp;and&nbsp;the<br>
+&nbsp;number&nbsp;of&nbsp;not-allowed&nbsp;ones&nbsp;in&nbsp;the&nbsp;window&nbsp;is&nbsp;above&nbsp;the&nbsp;threshold</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="MSPaintDumper">class <strong>MSPaintDumper</strong></a>(<a href="appmemdumper.html#GenericDumper">GenericDumper</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Dumper&nbsp;for&nbsp;the&nbsp;well-known&nbsp;application&nbsp;Paint&nbsp;built&nbsp;in&nbsp;Microsoft&nbsp;Windows.&nbsp;It<br>
+&nbsp;uses&nbsp;the&nbsp;'<a href="#MSPaintDumper-run">run</a>()'&nbsp;method&nbsp;of&nbsp;<a href="#GenericDumper">GenericDumper</a>&nbsp;to&nbsp;extract&nbsp;the&nbsp;memory&nbsp;of&nbsp;the<br>
+&nbsp;process&nbsp;for&nbsp;further&nbsp;analysis&nbsp;using&nbsp;the&nbsp;'memdump'&nbsp;Volatility&nbsp;command.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="appmemdumper.html#MSPaintDumper">MSPaintDumper</a></dd>
+<dd><a href="appmemdumper.html#GenericDumper">GenericDumper</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="MSPaintDumper-run"><strong>run</strong></a>(self)</dt></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>messages</strong> = ['Raw data (.data files) requires manual handling ...etting other parameters for width|height|palette.']</dl>
+
+<dl><dt><strong>procnames</strong> = ['mspaint.exe']</dl>
+
+<hr>
+Methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="MSPaintDumper-__init__"><strong>__init__</strong></a>(self, dump, name, pids)</dt><dd><tt>Simple&nbsp;constructor&nbsp;for&nbsp;setting&nbsp;base&nbsp;attributes.<br>
+&nbsp;<br>
+:param&nbsp;dump:&nbsp;<a href="#VolatilityMemDump">VolatilityMemDump</a>&nbsp;instance<br>
+:param&nbsp;name:&nbsp;application&nbsp;name<br>
+:param&nbsp;pids:&nbsp;list&nbsp;of&nbsp;pids&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;application&nbsp;name&nbsp;in&nbsp;dump</tt></dd></dl>
+
+<dl><dt><a name="MSPaintDumper-carve"><strong>carve</strong></a>(self, filepath, types<font color="#909090">=()</font>, clean<font color="#909090">=False</font>)</dt><dd><tt>Carve&nbsp;files&nbsp;of&nbsp;given&nbsp;types&nbsp;from&nbsp;the&nbsp;input&nbsp;resource&nbsp;with&nbsp;Foremost.<br>
+&nbsp;<br>
+:param&nbsp;filepath:&nbsp;file&nbsp;path&nbsp;of&nbsp;the&nbsp;resource&nbsp;to&nbsp;be&nbsp;carved<br>
+:param&nbsp;types:&nbsp;list&nbsp;of&nbsp;extensions&nbsp;to&nbsp;be&nbsp;carved&nbsp;from&nbsp;the&nbsp;resource</tt></dd></dl>
+
+<hr>
+Static methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="MSPaintDumper-reduce_text"><strong>reduce_text</strong></a>(text, alphabet<font color="#909090">='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&amp;<font color="#c040c0">\'</font>()*+,-./:;&lt;=&gt;?@[<font color="#c040c0">\\</font>]^_`{|}~ <font color="#c040c0">\t\n\r\x0b\x0c</font>'</font>, wsize<font color="#909090">=5</font>, threshold<font color="#909090">=3</font>)</dt><dd><tt>Determines&nbsp;start|end&nbsp;bounds&nbsp;based&nbsp;on&nbsp;a&nbsp;window&nbsp;of&nbsp;booleans&nbsp;telling&nbsp;if&nbsp;the<br>
+&nbsp;characters&nbsp;are&nbsp;well&nbsp;in&nbsp;the&nbsp;allowed&nbsp;alphabet&nbsp;with&nbsp;the&nbsp;constraints&nbsp;that<br>
+&nbsp;the&nbsp;first&nbsp;character&nbsp;in&nbsp;the&nbsp;window&nbsp;must&nbsp;be&nbsp;a&nbsp;not-allowed&nbsp;one&nbsp;and&nbsp;the<br>
+&nbsp;number&nbsp;of&nbsp;not-allowed&nbsp;ones&nbsp;in&nbsp;the&nbsp;window&nbsp;is&nbsp;above&nbsp;the&nbsp;threshold</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="MediaPlayerClassicDumper">class <strong>MediaPlayerClassicDumper</strong></a>(<a href="appmemdumper.html#GenericDumper">GenericDumper</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Dumper&nbsp;for&nbsp;the&nbsp;common&nbsp;application&nbsp;Media&nbsp;Player&nbsp;Classic.&nbsp;It&nbsp;performs&nbsp;the&nbsp;same<br>
+&nbsp;operations&nbsp;as&nbsp;<a href="#MSPaintDumper">MSPaintDumper</a>.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="appmemdumper.html#MediaPlayerClassicDumper">MediaPlayerClassicDumper</a></dd>
+<dd><a href="appmemdumper.html#GenericDumper">GenericDumper</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="MediaPlayerClassicDumper-run"><strong>run</strong></a>(self)</dt></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>messages</strong> = ['Raw data (.data files) requires manual handling ...etting other parameters for width|height|palette.']</dl>
+
+<dl><dt><strong>procnames</strong> = ['mpc-hc.exe']</dl>
+
+<hr>
+Methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="MediaPlayerClassicDumper-__init__"><strong>__init__</strong></a>(self, dump, name, pids)</dt><dd><tt>Simple&nbsp;constructor&nbsp;for&nbsp;setting&nbsp;base&nbsp;attributes.<br>
+&nbsp;<br>
+:param&nbsp;dump:&nbsp;<a href="#VolatilityMemDump">VolatilityMemDump</a>&nbsp;instance<br>
+:param&nbsp;name:&nbsp;application&nbsp;name<br>
+:param&nbsp;pids:&nbsp;list&nbsp;of&nbsp;pids&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;application&nbsp;name&nbsp;in&nbsp;dump</tt></dd></dl>
+
+<dl><dt><a name="MediaPlayerClassicDumper-carve"><strong>carve</strong></a>(self, filepath, types<font color="#909090">=()</font>, clean<font color="#909090">=False</font>)</dt><dd><tt>Carve&nbsp;files&nbsp;of&nbsp;given&nbsp;types&nbsp;from&nbsp;the&nbsp;input&nbsp;resource&nbsp;with&nbsp;Foremost.<br>
+&nbsp;<br>
+:param&nbsp;filepath:&nbsp;file&nbsp;path&nbsp;of&nbsp;the&nbsp;resource&nbsp;to&nbsp;be&nbsp;carved<br>
+:param&nbsp;types:&nbsp;list&nbsp;of&nbsp;extensions&nbsp;to&nbsp;be&nbsp;carved&nbsp;from&nbsp;the&nbsp;resource</tt></dd></dl>
+
+<hr>
+Static methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="MediaPlayerClassicDumper-reduce_text"><strong>reduce_text</strong></a>(text, alphabet<font color="#909090">='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&amp;<font color="#c040c0">\'</font>()*+,-./:;&lt;=&gt;?@[<font color="#c040c0">\\</font>]^_`{|}~ <font color="#c040c0">\t\n\r\x0b\x0c</font>'</font>, wsize<font color="#909090">=5</font>, threshold<font color="#909090">=3</font>)</dt><dd><tt>Determines&nbsp;start|end&nbsp;bounds&nbsp;based&nbsp;on&nbsp;a&nbsp;window&nbsp;of&nbsp;booleans&nbsp;telling&nbsp;if&nbsp;the<br>
+&nbsp;characters&nbsp;are&nbsp;well&nbsp;in&nbsp;the&nbsp;allowed&nbsp;alphabet&nbsp;with&nbsp;the&nbsp;constraints&nbsp;that<br>
+&nbsp;the&nbsp;first&nbsp;character&nbsp;in&nbsp;the&nbsp;window&nbsp;must&nbsp;be&nbsp;a&nbsp;not-allowed&nbsp;one&nbsp;and&nbsp;the<br>
+&nbsp;number&nbsp;of&nbsp;not-allowed&nbsp;ones&nbsp;in&nbsp;the&nbsp;window&nbsp;is&nbsp;above&nbsp;the&nbsp;threshold</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="NotepadDumper">class <strong>NotepadDumper</strong></a>(<a href="appmemdumper.html#GenericDumper">GenericDumper</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Dumper&nbsp;for&nbsp;the&nbsp;well-known&nbsp;application&nbsp;Notepad&nbsp;built&nbsp;in&nbsp;Microsoft&nbsp;Windows.&nbsp;It<br>
+&nbsp;tries&nbsp;the&nbsp;'notepad'&nbsp;plugin,&nbsp;then&nbsp;tries&nbsp;the&nbsp;'editbox'&nbsp;plugin&nbsp;or&nbsp;finally&nbsp;gets<br>
+&nbsp;the&nbsp;text&nbsp;contained&nbsp;in&nbsp;the&nbsp;edition&nbsp;control&nbsp;box&nbsp;of&nbsp;the&nbsp;main&nbsp;window&nbsp;of&nbsp;Notepad<br>
+&nbsp;from&nbsp;a&nbsp;VAD&nbsp;node&nbsp;based&nbsp;on&nbsp;a&nbsp;pattern.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="appmemdumper.html#NotepadDumper">NotepadDumper</a></dd>
+<dd><a href="appmemdumper.html#GenericDumper">GenericDumper</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="NotepadDumper-run"><strong>run</strong></a>(self)</dt><dd><tt>Executes&nbsp;the&nbsp;'editbox'&nbsp;Volatility&nbsp;command.</tt></dd></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>fmt_patterns</strong> = [('<font color="#c040c0">\xf2\xf3\xf3\xff\xf1\xf2\xf2\xff\xf0\xf1\xf0\xff\xf0\xf1\xf1\xff</font>', '<font color="#c040c0">\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00</font>', 'txt')]</dl>
+
+<dl><dt><strong>procnames</strong> = ['notepad.exe']</dl>
+
+<hr>
+Methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="NotepadDumper-__init__"><strong>__init__</strong></a>(self, dump, name, pids)</dt><dd><tt>Simple&nbsp;constructor&nbsp;for&nbsp;setting&nbsp;base&nbsp;attributes.<br>
+&nbsp;<br>
+:param&nbsp;dump:&nbsp;<a href="#VolatilityMemDump">VolatilityMemDump</a>&nbsp;instance<br>
+:param&nbsp;name:&nbsp;application&nbsp;name<br>
+:param&nbsp;pids:&nbsp;list&nbsp;of&nbsp;pids&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;application&nbsp;name&nbsp;in&nbsp;dump</tt></dd></dl>
+
+<dl><dt><a name="NotepadDumper-carve"><strong>carve</strong></a>(self, filepath, types<font color="#909090">=()</font>, clean<font color="#909090">=False</font>)</dt><dd><tt>Carve&nbsp;files&nbsp;of&nbsp;given&nbsp;types&nbsp;from&nbsp;the&nbsp;input&nbsp;resource&nbsp;with&nbsp;Foremost.<br>
+&nbsp;<br>
+:param&nbsp;filepath:&nbsp;file&nbsp;path&nbsp;of&nbsp;the&nbsp;resource&nbsp;to&nbsp;be&nbsp;carved<br>
+:param&nbsp;types:&nbsp;list&nbsp;of&nbsp;extensions&nbsp;to&nbsp;be&nbsp;carved&nbsp;from&nbsp;the&nbsp;resource</tt></dd></dl>
+
+<hr>
+Static methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="NotepadDumper-reduce_text"><strong>reduce_text</strong></a>(text, alphabet<font color="#909090">='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&amp;<font color="#c040c0">\'</font>()*+,-./:;&lt;=&gt;?@[<font color="#c040c0">\\</font>]^_`{|}~ <font color="#c040c0">\t\n\r\x0b\x0c</font>'</font>, wsize<font color="#909090">=5</font>, threshold<font color="#909090">=3</font>)</dt><dd><tt>Determines&nbsp;start|end&nbsp;bounds&nbsp;based&nbsp;on&nbsp;a&nbsp;window&nbsp;of&nbsp;booleans&nbsp;telling&nbsp;if&nbsp;the<br>
+&nbsp;characters&nbsp;are&nbsp;well&nbsp;in&nbsp;the&nbsp;allowed&nbsp;alphabet&nbsp;with&nbsp;the&nbsp;constraints&nbsp;that<br>
+&nbsp;the&nbsp;first&nbsp;character&nbsp;in&nbsp;the&nbsp;window&nbsp;must&nbsp;be&nbsp;a&nbsp;not-allowed&nbsp;one&nbsp;and&nbsp;the<br>
+&nbsp;number&nbsp;of&nbsp;not-allowed&nbsp;ones&nbsp;in&nbsp;the&nbsp;window&nbsp;is&nbsp;above&nbsp;the&nbsp;threshold</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>messages</strong> = []</dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="PDFLiteDumper">class <strong>PDFLiteDumper</strong></a>(<a href="appmemdumper.html#AdobeReaderDumper">AdobeReaderDumper</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Dumper&nbsp;for&nbsp;the&nbsp;common&nbsp;application&nbsp;PDFLite.&nbsp;It&nbsp;performs&nbsp;the&nbsp;same&nbsp;operations<br>
+&nbsp;as&nbsp;<a href="#AdobeReaderDumper">AdobeReaderDumper</a>.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="appmemdumper.html#PDFLiteDumper">PDFLiteDumper</a></dd>
+<dd><a href="appmemdumper.html#AdobeReaderDumper">AdobeReaderDumper</a></dd>
+<dd><a href="appmemdumper.html#GenericDumper">GenericDumper</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>procnames</strong> = ['PDFlite.exe']</dl>
+
+<hr>
+Methods inherited from <a href="appmemdumper.html#AdobeReaderDumper">AdobeReaderDumper</a>:<br>
+<dl><dt><a name="PDFLiteDumper-run"><strong>run</strong></a>(self)</dt><dd><tt>Executes&nbsp;the&nbsp;'memdump'&nbsp;Volatility&nbsp;command&nbsp;(<a href="#GenericDumper">GenericDumper</a>),&nbsp;carves&nbsp;PDF<br>
+&nbsp;files&nbsp;with&nbsp;Foremost&nbsp;then&nbsp;removes&nbsp;the&nbsp;process&nbsp;memory&nbsp;dump.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="PDFLiteDumper-__init__"><strong>__init__</strong></a>(self, dump, name, pids)</dt><dd><tt>Simple&nbsp;constructor&nbsp;for&nbsp;setting&nbsp;base&nbsp;attributes.<br>
+&nbsp;<br>
+:param&nbsp;dump:&nbsp;<a href="#VolatilityMemDump">VolatilityMemDump</a>&nbsp;instance<br>
+:param&nbsp;name:&nbsp;application&nbsp;name<br>
+:param&nbsp;pids:&nbsp;list&nbsp;of&nbsp;pids&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;application&nbsp;name&nbsp;in&nbsp;dump</tt></dd></dl>
+
+<dl><dt><a name="PDFLiteDumper-carve"><strong>carve</strong></a>(self, filepath, types<font color="#909090">=()</font>, clean<font color="#909090">=False</font>)</dt><dd><tt>Carve&nbsp;files&nbsp;of&nbsp;given&nbsp;types&nbsp;from&nbsp;the&nbsp;input&nbsp;resource&nbsp;with&nbsp;Foremost.<br>
+&nbsp;<br>
+:param&nbsp;filepath:&nbsp;file&nbsp;path&nbsp;of&nbsp;the&nbsp;resource&nbsp;to&nbsp;be&nbsp;carved<br>
+:param&nbsp;types:&nbsp;list&nbsp;of&nbsp;extensions&nbsp;to&nbsp;be&nbsp;carved&nbsp;from&nbsp;the&nbsp;resource</tt></dd></dl>
+
+<hr>
+Static methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="PDFLiteDumper-reduce_text"><strong>reduce_text</strong></a>(text, alphabet<font color="#909090">='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&amp;<font color="#c040c0">\'</font>()*+,-./:;&lt;=&gt;?@[<font color="#c040c0">\\</font>]^_`{|}~ <font color="#c040c0">\t\n\r\x0b\x0c</font>'</font>, wsize<font color="#909090">=5</font>, threshold<font color="#909090">=3</font>)</dt><dd><tt>Determines&nbsp;start|end&nbsp;bounds&nbsp;based&nbsp;on&nbsp;a&nbsp;window&nbsp;of&nbsp;booleans&nbsp;telling&nbsp;if&nbsp;the<br>
+&nbsp;characters&nbsp;are&nbsp;well&nbsp;in&nbsp;the&nbsp;allowed&nbsp;alphabet&nbsp;with&nbsp;the&nbsp;constraints&nbsp;that<br>
+&nbsp;the&nbsp;first&nbsp;character&nbsp;in&nbsp;the&nbsp;window&nbsp;must&nbsp;be&nbsp;a&nbsp;not-allowed&nbsp;one&nbsp;and&nbsp;the<br>
+&nbsp;number&nbsp;of&nbsp;not-allowed&nbsp;ones&nbsp;in&nbsp;the&nbsp;window&nbsp;is&nbsp;above&nbsp;the&nbsp;threshold</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>messages</strong> = []</dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="SumatraPDFDumper">class <strong>SumatraPDFDumper</strong></a>(<a href="appmemdumper.html#AdobeReaderDumper">AdobeReaderDumper</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Dumper&nbsp;for&nbsp;the&nbsp;common&nbsp;application&nbsp;Sumatra&nbsp;PDF.&nbsp;It&nbsp;performs&nbsp;the&nbsp;same<br>
+&nbsp;operations&nbsp;as&nbsp;<a href="#AdobeReaderDumper">AdobeReaderDumper</a>.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="appmemdumper.html#SumatraPDFDumper">SumatraPDFDumper</a></dd>
+<dd><a href="appmemdumper.html#AdobeReaderDumper">AdobeReaderDumper</a></dd>
+<dd><a href="appmemdumper.html#GenericDumper">GenericDumper</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>procnames</strong> = ['SumatraPDF.exe']</dl>
+
+<hr>
+Methods inherited from <a href="appmemdumper.html#AdobeReaderDumper">AdobeReaderDumper</a>:<br>
+<dl><dt><a name="SumatraPDFDumper-run"><strong>run</strong></a>(self)</dt><dd><tt>Executes&nbsp;the&nbsp;'memdump'&nbsp;Volatility&nbsp;command&nbsp;(<a href="#GenericDumper">GenericDumper</a>),&nbsp;carves&nbsp;PDF<br>
+&nbsp;files&nbsp;with&nbsp;Foremost&nbsp;then&nbsp;removes&nbsp;the&nbsp;process&nbsp;memory&nbsp;dump.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="SumatraPDFDumper-__init__"><strong>__init__</strong></a>(self, dump, name, pids)</dt><dd><tt>Simple&nbsp;constructor&nbsp;for&nbsp;setting&nbsp;base&nbsp;attributes.<br>
+&nbsp;<br>
+:param&nbsp;dump:&nbsp;<a href="#VolatilityMemDump">VolatilityMemDump</a>&nbsp;instance<br>
+:param&nbsp;name:&nbsp;application&nbsp;name<br>
+:param&nbsp;pids:&nbsp;list&nbsp;of&nbsp;pids&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;application&nbsp;name&nbsp;in&nbsp;dump</tt></dd></dl>
+
+<dl><dt><a name="SumatraPDFDumper-carve"><strong>carve</strong></a>(self, filepath, types<font color="#909090">=()</font>, clean<font color="#909090">=False</font>)</dt><dd><tt>Carve&nbsp;files&nbsp;of&nbsp;given&nbsp;types&nbsp;from&nbsp;the&nbsp;input&nbsp;resource&nbsp;with&nbsp;Foremost.<br>
+&nbsp;<br>
+:param&nbsp;filepath:&nbsp;file&nbsp;path&nbsp;of&nbsp;the&nbsp;resource&nbsp;to&nbsp;be&nbsp;carved<br>
+:param&nbsp;types:&nbsp;list&nbsp;of&nbsp;extensions&nbsp;to&nbsp;be&nbsp;carved&nbsp;from&nbsp;the&nbsp;resource</tt></dd></dl>
+
+<hr>
+Static methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="SumatraPDFDumper-reduce_text"><strong>reduce_text</strong></a>(text, alphabet<font color="#909090">='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&amp;<font color="#c040c0">\'</font>()*+,-./:;&lt;=&gt;?@[<font color="#c040c0">\\</font>]^_`{|}~ <font color="#c040c0">\t\n\r\x0b\x0c</font>'</font>, wsize<font color="#909090">=5</font>, threshold<font color="#909090">=3</font>)</dt><dd><tt>Determines&nbsp;start|end&nbsp;bounds&nbsp;based&nbsp;on&nbsp;a&nbsp;window&nbsp;of&nbsp;booleans&nbsp;telling&nbsp;if&nbsp;the<br>
+&nbsp;characters&nbsp;are&nbsp;well&nbsp;in&nbsp;the&nbsp;allowed&nbsp;alphabet&nbsp;with&nbsp;the&nbsp;constraints&nbsp;that<br>
+&nbsp;the&nbsp;first&nbsp;character&nbsp;in&nbsp;the&nbsp;window&nbsp;must&nbsp;be&nbsp;a&nbsp;not-allowed&nbsp;one&nbsp;and&nbsp;the<br>
+&nbsp;number&nbsp;of&nbsp;not-allowed&nbsp;ones&nbsp;in&nbsp;the&nbsp;window&nbsp;is&nbsp;above&nbsp;the&nbsp;threshold</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>messages</strong> = []</dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="TrueCryptDumper">class <strong>TrueCryptDumper</strong></a>(<a href="appmemdumper.html#GenericDumper">GenericDumper</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Dumper&nbsp;for&nbsp;the&nbsp;common&nbsp;application&nbsp;TrueCrypt.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="appmemdumper.html#TrueCryptDumper">TrueCryptDumper</a></dd>
+<dd><a href="appmemdumper.html#GenericDumper">GenericDumper</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="TrueCryptDumper-run"><strong>run</strong></a>(self)</dt></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>procnames</strong> = ['TrueCrypt.exe']</dl>
+
+<hr>
+Methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="TrueCryptDumper-__init__"><strong>__init__</strong></a>(self, dump, name, pids)</dt><dd><tt>Simple&nbsp;constructor&nbsp;for&nbsp;setting&nbsp;base&nbsp;attributes.<br>
+&nbsp;<br>
+:param&nbsp;dump:&nbsp;<a href="#VolatilityMemDump">VolatilityMemDump</a>&nbsp;instance<br>
+:param&nbsp;name:&nbsp;application&nbsp;name<br>
+:param&nbsp;pids:&nbsp;list&nbsp;of&nbsp;pids&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;application&nbsp;name&nbsp;in&nbsp;dump</tt></dd></dl>
+
+<dl><dt><a name="TrueCryptDumper-carve"><strong>carve</strong></a>(self, filepath, types<font color="#909090">=()</font>, clean<font color="#909090">=False</font>)</dt><dd><tt>Carve&nbsp;files&nbsp;of&nbsp;given&nbsp;types&nbsp;from&nbsp;the&nbsp;input&nbsp;resource&nbsp;with&nbsp;Foremost.<br>
+&nbsp;<br>
+:param&nbsp;filepath:&nbsp;file&nbsp;path&nbsp;of&nbsp;the&nbsp;resource&nbsp;to&nbsp;be&nbsp;carved<br>
+:param&nbsp;types:&nbsp;list&nbsp;of&nbsp;extensions&nbsp;to&nbsp;be&nbsp;carved&nbsp;from&nbsp;the&nbsp;resource</tt></dd></dl>
+
+<hr>
+Static methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="TrueCryptDumper-reduce_text"><strong>reduce_text</strong></a>(text, alphabet<font color="#909090">='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&amp;<font color="#c040c0">\'</font>()*+,-./:;&lt;=&gt;?@[<font color="#c040c0">\\</font>]^_`{|}~ <font color="#c040c0">\t\n\r\x0b\x0c</font>'</font>, wsize<font color="#909090">=5</font>, threshold<font color="#909090">=3</font>)</dt><dd><tt>Determines&nbsp;start|end&nbsp;bounds&nbsp;based&nbsp;on&nbsp;a&nbsp;window&nbsp;of&nbsp;booleans&nbsp;telling&nbsp;if&nbsp;the<br>
+&nbsp;characters&nbsp;are&nbsp;well&nbsp;in&nbsp;the&nbsp;allowed&nbsp;alphabet&nbsp;with&nbsp;the&nbsp;constraints&nbsp;that<br>
+&nbsp;the&nbsp;first&nbsp;character&nbsp;in&nbsp;the&nbsp;window&nbsp;must&nbsp;be&nbsp;a&nbsp;not-allowed&nbsp;one&nbsp;and&nbsp;the<br>
+&nbsp;number&nbsp;of&nbsp;not-allowed&nbsp;ones&nbsp;in&nbsp;the&nbsp;window&nbsp;is&nbsp;above&nbsp;the&nbsp;threshold</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>messages</strong> = []</dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="VolatilityMemDump">class <strong>VolatilityMemDump</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Volatility&nbsp;memory&nbsp;dump&nbsp;class&nbsp;that&nbsp;handles&nbsp;profile&nbsp;search&nbsp;and&nbsp;processes&nbsp;list<br>
+&nbsp;retrieval.&nbsp;It&nbsp;allows&nbsp;either&nbsp;to&nbsp;execute&nbsp;a&nbsp;command&nbsp;from&nbsp;the&nbsp;Python&nbsp;API&nbsp;or&nbsp;to<br>
+&nbsp;call&nbsp;Volatility&nbsp;in&nbsp;a&nbsp;subprocess.<br>
+At&nbsp;processes&nbsp;list&nbsp;creation,&nbsp;it&nbsp;creates&nbsp;a&nbsp;list&nbsp;of&nbsp;Volatility&nbsp;application<br>
+&nbsp;dumpers&nbsp;for&nbsp;the&nbsp;common&nbsp;applications&nbsp;handled&nbsp;by&nbsp;this&nbsp;tool&nbsp;by&nbsp;instantiating<br>
+&nbsp;VolatilityAppDumper.&nbsp;It&nbsp;also&nbsp;provides&nbsp;a&nbsp;'<a href="#VolatilityMemDump-dump">dump</a>()'&nbsp;method&nbsp;to&nbsp;trigger&nbsp;the<br>
+&nbsp;dumping&nbsp;of&nbsp;resources&nbsp;with&nbsp;the&nbsp;application&nbsp;dumpers.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="VolatilityMemDump-__init__"><strong>__init__</strong></a>(self, dump, selected_apps, out_dir<font color="#909090">='files'</font>, plugins_dir<font color="#909090">=None</font>, from_cache<font color="#909090">=True</font>)</dt><dd><tt>Determines&nbsp;the&nbsp;profile,&nbsp;retrieves&nbsp;the&nbsp;list&nbsp;of&nbsp;processes&nbsp;and&nbsp;creates&nbsp;the<br>
+&nbsp;list&nbsp;of&nbsp;application&nbsp;dumpers.<br>
+&nbsp;<br>
+:param&nbsp;dump:&nbsp;Volatility&nbsp;memory&nbsp;dump&nbsp;filename<br>
+:param&nbsp;selected_apps:&nbsp;list&nbsp;of&nbsp;the&nbsp;application&nbsp;names&nbsp;to&nbsp;be&nbsp;handled<br>
+:param&nbsp;out_dir:&nbsp;output&nbsp;directory&nbsp;for&nbsp;retrieved&nbsp;resources<br>
+:param&nbsp;plugins_dir:&nbsp;Volatility&nbsp;custom&nbsp;plugins&nbsp;directory<br>
+:param&nbsp;from_cache:&nbsp;boolean&nbsp;indicating&nbsp;if&nbsp;the&nbsp;profile&nbsp;must&nbsp;be&nbsp;retrieved<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from&nbsp;a&nbsp;cache&nbsp;file&nbsp;in&nbsp;/tmp&nbsp;or&nbsp;found&nbsp;by&nbsp;Volatility</tt></dd></dl>
+
+<dl><dt><a name="VolatilityMemDump-call"><strong>call</strong></a>(self, command, options<font color="#909090">=None</font>, parser<font color="#909090">=None</font>)</dt><dd><tt>Run&nbsp;Volatility&nbsp;with&nbsp;given&nbsp;command&nbsp;and&nbsp;options&nbsp;using&nbsp;subprocess.<br>
+&nbsp;<br>
+:param&nbsp;command:&nbsp;Volatility&nbsp;command&nbsp;name<br>
+:param&nbsp;options:&nbsp;valid&nbsp;command-related&nbsp;options<br>
+:param&nbsp;parser:&nbsp;None&nbsp;or&nbsp;function&nbsp;for&nbsp;parsing&nbsp;the&nbsp;output<br>
+:return:&nbsp;parsed&nbsp;output</tt></dd></dl>
+
+<dl><dt><a name="VolatilityMemDump-dump"><strong>dump</strong></a>(self)</dt><dd><tt>Dump&nbsp;resources&nbsp;for&nbsp;every&nbsp;known&nbsp;application&nbsp;in&nbsp;the&nbsp;memory&nbsp;dump.</tt></dd></dl>
+
+<dl><dt><a name="VolatilityMemDump-execute"><strong>execute</strong></a>(self, command, nopid<font color="#909090">=False</font>, text<font color="#909090">=False</font>, parser<font color="#909090">=None</font>)</dt><dd><tt>Run&nbsp;Volatility&nbsp;command&nbsp;through&nbsp;the&nbsp;dedicated&nbsp;Python&nbsp;API.<br>
+&nbsp;<br>
+:param&nbsp;command:&nbsp;Volatility&nbsp;command&nbsp;name<br>
+:param&nbsp;nopid:&nbsp;ensure&nbsp;no&nbsp;PID&nbsp;in&nbsp;the&nbsp;config&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;(for&nbsp;some&nbsp;commands&nbsp;that<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;search&nbsp;for&nbsp;application&nbsp;artifacts&nbsp;without&nbsp;requiring&nbsp;a&nbsp;PID)<br>
+:param&nbsp;text:&nbsp;convert&nbsp;the&nbsp;result&nbsp;into&nbsp;text<br>
+:param&nbsp;parser:&nbsp;None&nbsp;or&nbsp;function&nbsp;for&nbsp;parsing&nbsp;the&nbsp;output<br>
+:return:&nbsp;parsed&nbsp;output</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>parsers</strong> = {'imageinfo': &lt;function &lt;lambda&gt;&gt;}</dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="WordpadDumper">class <strong>WordpadDumper</strong></a>(<a href="appmemdumper.html#GenericDumper">GenericDumper</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Dumper&nbsp;for&nbsp;the&nbsp;well-known&nbsp;application&nbsp;Wordpad&nbsp;built&nbsp;in&nbsp;Microsoft&nbsp;Windows.&nbsp;It<br>
+&nbsp;uses&nbsp;the&nbsp;'<a href="#WordpadDumper-run">run</a>()'&nbsp;method&nbsp;of&nbsp;<a href="#GenericDumper">GenericDumper</a>&nbsp;to&nbsp;extract&nbsp;the&nbsp;memory&nbsp;of&nbsp;the<br>
+&nbsp;process&nbsp;for&nbsp;further&nbsp;analysis&nbsp;using&nbsp;the&nbsp;'memdump'&nbsp;Volatility&nbsp;command.&nbsp;It<br>
+&nbsp;also&nbsp;uses&nbsp;the&nbsp;'<a href="#WordpadDumper-carve">carve</a>()'&nbsp;method&nbsp;of&nbsp;<a href="#GenericDumper">GenericDumper</a>&nbsp;to&nbsp;extract&nbsp;image&nbsp;resources<br>
+&nbsp;and&nbsp;executes&nbsp;the&nbsp;'vaddump'&nbsp;Volatility&nbsp;command&nbsp;for&nbsp;retrieving&nbsp;Virtual<br>
+&nbsp;Address&nbsp;Descriptor&nbsp;(VAD)&nbsp;objects&nbsp;for&nbsp;later&nbsp;manual&nbsp;analysis.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="appmemdumper.html#WordpadDumper">WordpadDumper</a></dd>
+<dd><a href="appmemdumper.html#GenericDumper">GenericDumper</a></dd>
+<dd><a href="__builtin__.html#object">__builtin__.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="WordpadDumper-run"><strong>run</strong></a>(self)</dt><dd><tt>Executes&nbsp;the&nbsp;'memdump'&nbsp;Volatility&nbsp;command&nbsp;(<a href="#GenericDumper">GenericDumper</a>),&nbsp;carves&nbsp;files<br>
+&nbsp;with&nbsp;Foremost&nbsp;then&nbsp;executes&nbsp;the&nbsp;'editbox'&nbsp;Volatility&nbsp;command.</tt></dd></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>messages</strong> = ['Raw data (.data files) requires manual handling ...etting other parameters for width|height|palette.', "VAD objects (collected with 'vaddump' require fu...tch text elements, you can grep the .dmp objects."]</dl>
+
+<dl><dt><strong>procnames</strong> = ['wordpad.exe']</dl>
+
+<hr>
+Methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="WordpadDumper-__init__"><strong>__init__</strong></a>(self, dump, name, pids)</dt><dd><tt>Simple&nbsp;constructor&nbsp;for&nbsp;setting&nbsp;base&nbsp;attributes.<br>
+&nbsp;<br>
+:param&nbsp;dump:&nbsp;<a href="#VolatilityMemDump">VolatilityMemDump</a>&nbsp;instance<br>
+:param&nbsp;name:&nbsp;application&nbsp;name<br>
+:param&nbsp;pids:&nbsp;list&nbsp;of&nbsp;pids&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;application&nbsp;name&nbsp;in&nbsp;dump</tt></dd></dl>
+
+<dl><dt><a name="WordpadDumper-carve"><strong>carve</strong></a>(self, filepath, types<font color="#909090">=()</font>, clean<font color="#909090">=False</font>)</dt><dd><tt>Carve&nbsp;files&nbsp;of&nbsp;given&nbsp;types&nbsp;from&nbsp;the&nbsp;input&nbsp;resource&nbsp;with&nbsp;Foremost.<br>
+&nbsp;<br>
+:param&nbsp;filepath:&nbsp;file&nbsp;path&nbsp;of&nbsp;the&nbsp;resource&nbsp;to&nbsp;be&nbsp;carved<br>
+:param&nbsp;types:&nbsp;list&nbsp;of&nbsp;extensions&nbsp;to&nbsp;be&nbsp;carved&nbsp;from&nbsp;the&nbsp;resource</tt></dd></dl>
+
+<hr>
+Static methods inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><a name="WordpadDumper-reduce_text"><strong>reduce_text</strong></a>(text, alphabet<font color="#909090">='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&amp;<font color="#c040c0">\'</font>()*+,-./:;&lt;=&gt;?@[<font color="#c040c0">\\</font>]^_`{|}~ <font color="#c040c0">\t\n\r\x0b\x0c</font>'</font>, wsize<font color="#909090">=5</font>, threshold<font color="#909090">=3</font>)</dt><dd><tt>Determines&nbsp;start|end&nbsp;bounds&nbsp;based&nbsp;on&nbsp;a&nbsp;window&nbsp;of&nbsp;booleans&nbsp;telling&nbsp;if&nbsp;the<br>
+&nbsp;characters&nbsp;are&nbsp;well&nbsp;in&nbsp;the&nbsp;allowed&nbsp;alphabet&nbsp;with&nbsp;the&nbsp;constraints&nbsp;that<br>
+&nbsp;the&nbsp;first&nbsp;character&nbsp;in&nbsp;the&nbsp;window&nbsp;must&nbsp;be&nbsp;a&nbsp;not-allowed&nbsp;one&nbsp;and&nbsp;the<br>
+&nbsp;number&nbsp;of&nbsp;not-allowed&nbsp;ones&nbsp;in&nbsp;the&nbsp;window&nbsp;is&nbsp;above&nbsp;the&nbsp;threshold</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="appmemdumper.html#GenericDumper">GenericDumper</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>__all__</strong> = ['VolatilityMemDump', 'GenericDumper', 'TrueCryptDumper', 'MSPaintDumper', 'SumatraPDFDumper', 'InternetExplorerDumper', 'FoxitReaderDumper', 'KeePassDumper', 'WordpadDumper', 'MediaPlayerClassicDumper', 'DumpInfoDumper', 'PDFLiteDumper', 'AdobeReaderDumper', 'FirefoxDumper', 'NotepadDumper']<br>
+<strong>__author__</strong> = "Alexandre D'Hondt"<br>
+<strong>__copyright__</strong> = 'AGPLv3 (http://www.gnu.org/licenses/agpl.html)'<br>
+<strong>__examples__</strong> = ['memory.dmp', 'my-dumps.tar.gz', 'dump.raw -a 0,1 -f']<br>
+<strong>__print__</strong> = 'Print documentation:<font color="#c040c0">\n</font>- stdout: pydoc {0}<font color="#c040c0">\n</font>- html  : pydoc -w {0}'<br>
+<strong>__reference__</strong> = 'Ms Cybersecurity / INFO-Y64 - Intro to Digital Forensics'<br>
+<strong>__version__</strong> = '1.0'</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#7799ee">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Author</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#7799ee"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Alexandre&nbsp;D'Hondt</td></tr></table>
+</body></html>

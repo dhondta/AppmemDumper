@@ -1,0 +1,17 @@
+language: python
+sudo: required
+
+python:
+  - "2.7"
+
+addons:
+  apt:
+    packages:
+    - volatility
+    - foremost
+
+install:
+  - pip install pyunpack
+
+script:
+  - cp appmemdumper /usr/bin/
