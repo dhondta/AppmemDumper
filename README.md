@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/dhondta/AppmemDumper.svg?branch=master)](https://travis-ci.org/dhondta/AppmemDumper)
+[![DOI](https://zenodo.org/badge/93773338.svg)](https://zenodo.org/badge/latestdoi/93773338)
+
+
 ## Table of Contents
 
    * [Introduction](#introduction)
