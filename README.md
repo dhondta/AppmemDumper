@@ -8,7 +8,7 @@
    * [Issues management](#issues-management)
 
 
-# Introduction
+## Introduction
 
 This self-contained tool automates the research of some artifacts for forensics purpose in memory dumps based upon Volatility for a series of common Windows applications.
 
