@@ -10,14 +10,14 @@ addons:
     - foremost
 
 before_install:
-  - apt-get update -qq
-  - apt-get install python-dev
+  - sudo apt-get update -qq
+  - sudo apt-get install python-dev
 
 install:
-  - pip install -U pip setuptools
+  - sudo pip install -U pip setuptools
   - git clone https://github.com/volatilityfoundation/volatility vol-setup
-  - cd vol-setup && python setup.py install && cd ..
-  - pip install pyunpack
+  - cd vol-setup && sudo python setup.py install && cd ..
+  - sudo pip install pyunpack
 
 script:
-  - cp appmemdumper /usr/bin/
+  - sudo cp appmemdumper /usr/bin/
