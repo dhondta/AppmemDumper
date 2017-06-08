@@ -7,10 +7,16 @@ python:
 addons:
   apt:
     packages:
-    - volatility
     - foremost
 
+before_install:
+  - apt-get update -qq
+  - apt-get install python-dev
+
 install:
+  - pip install -U pip setuptools
+  - git clone https://github.com/volatilityfoundation/volatility vol-setup
+  - cd vol-setup && python setup.py install && cd ..
   - pip install pyunpack
 
 script:
