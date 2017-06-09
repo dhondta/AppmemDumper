@@ -1019,7 +1019,9 @@ class OpenOfficeDumper(GenericDumper):
     """
     Dumper for the common OpenOffice suite.
     """
-    procnames = ["soffice.exe", "soffice.bin", "swriter.exe"]
+    procnames = ["soffice.exe", "soffice.bin", "swriter.exe", "scalc.exe",
+                 "simpress.exe", "sdraw.exe", "sbase.exe", "smath.exe",
+                 "sweb.exe"]
     # https://ubuntuforums.org/showthread.php?t=1378119
     re_patterns = [(r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.textP'
                     r'K(.*?)META-INF/manifest.xmlPK.{20}', "odt", "text"),
