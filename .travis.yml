@@ -20,4 +20,5 @@ install:
   - sudo pip install pyunpack
 
 script:
-  - echo Done
+  - chmod a+x appmemdumper.py
+  - ./appmemdumper.py -h

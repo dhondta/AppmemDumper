@@ -104,10 +104,12 @@ Its Python logic only uses standard built-in modules except `pyunpack`. It makes
                   [6] mediaplayerclassic
                   [7] mspaint
                   [8] notepad
-                  [9] pdflite
-                  [10] sumatrapdf
-                  [11] truecrypt
-                  [12] wordpad
+                  [9] openoffice
+                  [10] pdflite
+                  [11] sumatrapdf
+                  [12] truecrypt
+                  [13] userhashes*
+                  [14] wordpad
                  (*: general-purpose dumper)
    -d DUMP_DIR  dump directory (default: ./files/)
    -f           force profile search, do not use cached profile (default: false)

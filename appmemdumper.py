@@ -36,7 +36,7 @@ import StringIO
 import sys
 from collections import deque
 from copy import deepcopy
-from subprocess import CalledProcessError, PIPE, Popen
+from subprocess import check_output, CalledProcessError, PIPE, Popen
 # non-standard imports with warning if dependencies are missing
 try:
     from pyunpack import Archive, PatoolError
@@ -74,6 +74,8 @@ SCRIPT, _ = os.path.splitext(os.path.basename(__file__))
 LOG_FORMAT = '[%(name)s] %(asctime)s [%(levelname)s] %(message)s'
 DATE_FORMAT = '%H:%M:%S'
 CMD = 'volatility {opt} {cmd}'
+ARCHIVE_EXCL = lambda f: os.path.basename(f) in ["README", "README.md"] \
+                         or f.endswith(".txt")
 
 
 # ------------------------------ HELPERS SECTION ------------------------------
@@ -142,8 +144,31 @@ def __decompress(filename, temp_dir):
     if ext2 != '':
         ext = ext2
     tmp_dir = os.path.join(os.path.abspath(temp_dir), base)
+    # try to list files from the archive (do not re-decompress if files are
+    #  already present)
+    if os.path.isdir(tmp_dir) and len(os.listdir(tmp_dir)) > 0:
+        logger.info("Listing files from '{}'...".format(filename))
+        try:
+            out = check_output(["patool", "list", filename])
+            files, bad = [], False
+            for line in out.split('\n'):
+                if line.startswith("patool: "):
+                    break
+                fn = os.path.join(tmp_dir, line)
+                if not os.path.isfile(fn) and not ARCHIVE_EXCL(fn):
+                    bad = True
+                    break
+                if not ARCHIVE_EXCL(fn):
+                    files.append(fn)
+            if not bad:
+                # if all required files are already decompressed, just return
+                #  the list of file paths
+                return True, files
+        except CalledProcessError:
+            logger.debug("Not an archive, continuing...")
+            return False, [filename]
     # now extract files
-    logger.debug("Attempting to decompress '{}'...".format(filename))
+    logger.info("Decompressing '{}' (if archive)...".format(filename))
     archive = Archive(filename)
     try:
         archive.extractall(tmp_dir, auto_create_dir=True)
@@ -156,7 +181,7 @@ def __decompress(filename, temp_dir):
             exit_handler(code=2)
     # retrieve the list of extracted files
     return True, [os.path.join(tmp_dir, fn) for fn in os.listdir(tmp_dir) \
-           if fn not in ["README", "README.md"] or not fn.endswith("txt")]
+                  if not ARCHIVE_EXCL(fn)]
 
 
 # ------------------------------ CLASSES SECTION ------------------------------
@@ -321,18 +346,20 @@ class VolatilityMemDump(object):
             logger.warn("No application to be handled")
         return True
 
-    def call(self, command, options=None, parser=None):
+    def call(self, command, options=None, parser=None, silentfail=False):
         """
         Run Volatility with given command and options using subprocess.
 
         :param command: Volatility command name
         :param options: valid command-related options
         :param parser: None or function for parsing the output
+        :param silentfail: boolean to make the call fail silently or not
         :return: parsed output
         """
         assert isinstance(command, str)
         assert options is None or isinstance(options, str)
         assert parser is None or callable(parser)
+        assert isinstance(silentfail, bool)
         # compose the list of options with already known and input information
         options = [options] if options is not None else []
         if self.__is_profile_tested:
@@ -348,8 +375,11 @@ class VolatilityMemDump(object):
         p = Popen(cmd.split(), stdin=PIPE, stdout=PIPE, stderr=PIPE)
         out, err = p.communicate()
         if "ERROR" in err:
-            logger.error(err.split(":", 1)[1].strip())
-            raise CalledProcessError(1, cmd)
+            if silentfail:
+                return
+            else:
+                logger.error(err.split(":", 1)[1].strip())
+                raise CalledProcessError(1, cmd)
         out = out.replace('\r\n', '\n')
         # then parse the output with the given parser and return the result
         if parser is not None:
@@ -503,8 +533,9 @@ class GenericDumper(object):
         assert isinstance(pids, list) and all(x.isdigit() for x in pids)
         self.dump = dump
         self.pids = pids
-        self._resname = lambda p, c, f=None: (name.lower() + "-{}-{}{}") \
-                                .format(p, c, [".{}".format(f), ""][f is None])
+        self._resname = lambda p, c, f=None: (name.lower() + "{}-{}{}") \
+                                .format(["-{}".format(p), ""][p is None], c, \
+                                        [".{}".format(f), ""][f is None])
         self.__nopid = []
 
     def _dump_dir(self, *subdirs):
@@ -529,6 +560,7 @@ class GenericDumper(object):
         :param cmd: Volatility command used to extract the resource
         :param fmt: extension of the destination resource
         """
+        content = content or ""
         assert isinstance(content, str)
         assert isinstance(cmd, str)
         assert isinstance(fmt, str)
@@ -587,10 +619,14 @@ class GenericDumper(object):
         Consecutively execute the public 'run()' method on each PID from the
          pids list.
         """
-        for pid in self.pids:
-            logger.debug("Dumping for PID {}".format(pid))
-            self.dump.config.PID = pid
+        if len(self.pids) == 0:
+            logger.debug("Dumping information...")
             self.run()
+        else:
+            for pid in self.pids:
+                logger.debug("Dumping for PID {}...".format(pid))
+                self.dump.config.PID = pid
+                self.run()
         return self.messages
 
     def _vaddump(self, verbose=True):
@@ -742,7 +778,32 @@ class DumpInfoDumper(GenericDumper):
         Executes a series of informational Volatility commands.
         """
         for cmd in ['crashinfo', 'hibinfo', 'vboxinfo', 'vmwareinfo']:
-            self._dump_file(self.dump.execute(cmd, text=True), cmd)
+            self._dump_file(self.dump.call(cmd, silentfail=True), cmd)
+
+
+class UserHashesDumper(GenericDumper):
+    """
+    Dumper of Windows user hashes from the memory image.
+    """
+    def run(self):
+        """
+        Executes 'hivelist' and 'hashdump' Volatility commands in order to
+         dump user hashes.
+        """
+        out = self.dump.call("hivelist")
+        re1, re2 = re.compile(r'(sam)$', re.I), re.compile(r'(system)$', re.I)
+        sam, system = None, None
+        for line in out.split('\n'):
+            if line.startswith("0x"):
+                start, end, hive = line.split(" ", 2)
+                if re1.search(hive) is not None:
+                    sam = start
+                if re2.search(hive) is not None:
+                    system = start
+        cmd = "hashdump"
+        if sam is not None and system is not None:
+            out = self.dump.call(cmd, "{} -s {}".format(sam, system))
+            self._dump_file(out, cmd)
 
 
 # ------------------ APPLICATION-RELATED DUMPERS SECTION -----------------------
@@ -780,7 +841,8 @@ class NotepadDumper(GenericDumper):
         out = out.split("******************************\n")
         for result in out[1:]:
             meta, text = result.split("-------------------------\n")
-            if pid == VolatilityOutputParser(meta)['Process ID']:
+            pid = VolatilityOutputParser(meta)['Process ID']
+            if self.dump.config.PID == pid:
                 self._dump_file(text, cmd)
                 return
         logger.debug("Nothing found with 'editbox'")
@@ -910,6 +972,10 @@ class TrueCryptDumper(GenericDumper):
     procnames = ["TrueCrypt.exe"]
 
     def run(self):
+        """
+        Executes the 'memdump' Volatility command (GenericDumper) and the
+         TrueCrypt-related Volatility commands.
+        """
         self._memdump()
         for cmd in ['truecryptmaster', 'truecryptpassphrase',
                     'truecryptsummary']:
@@ -923,6 +989,9 @@ class InternetExplorerDumper(GenericDumper):
     procnames = ["iexplore.exe"]
 
     def run(self):
+        """
+        Executes the 'iehistory' Volatility command.
+        """
         cmd = 'iehistory'
         self._dump_file(self.dump.call(cmd), cmd)
 
@@ -934,7 +1003,9 @@ class FirefoxDumper(GenericDumper):
     procnames = ["firefox.exe"]
 
     def run(self):
-        pid = self.dump.config.PID
+        """
+        Executes the Firefox-related Volatility community plugins.
+        """
         try:
             for cmd in ['firefoxcookies', 'firefoxdownloads', 'firefoxhistory']:
                 self._dump_file(self.dump.call(cmd, "--output=csv"), cmd, 'csv')
@@ -942,6 +1013,44 @@ class FirefoxDumper(GenericDumper):
             logger.warn("Firefox plugins are not built in Volatility ; please"
                         " ensure that you used the -p option to set the path"
                         " to custom plugins.")
+
+
+class OpenOfficeDumper(GenericDumper):
+    """
+    Dumper for the common OpenOffice suite.
+    """
+    procnames = ["soffice.exe", "soffice.bin", "swriter.exe"]
+    # https://ubuntuforums.org/showthread.php?t=1378119
+    re_patterns = [(r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.textP'
+                    r'K(.*?)META-INF/manifest.xmlPK.{20}', "odt", "text"),
+                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.sprea'
+                    r'dsheetPK(.*?)META-INF/manifest.xmlPK.{20}', "ods",
+                    "spreadsheet"),
+                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.prese'
+                    r'ntationPK(.*?)META-INF/manifest.xmlPK.{20}', "odp",
+                    "presentation"),
+                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.graph'
+                    r'icsPK(.*?)META-INF/manifest.xmlPK.{20}', "odg",
+                    "graphics"),
+                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.chart'
+                    r'PK(.*?)META-INF/manifest.xmlPK.{20}', "odc", "chart"),
+                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.formu'
+                    r'laPK(.*?)META-INF/manifest.xmlPK.{20}', "odf",
+                    "formula"),
+                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.image'
+                    r'PK(.*?)META-INF/manifest.xmlPK.{20}', "odi", "image"),
+                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.text-'
+                    r'masterPK(.*?)META-INF/manifest.xmlPK.{20}', "odm",
+                    "textmaster"),
+                   (r'(PK).{28}mimetypeapplication/vnd.sun.xml.writerPK(.*?)'
+                    r'META-INF/manifest.xmlPK.{20}', "sxw", "writer")]
+
+    def run(self):
+        """
+        Executes the 'memdump' Volatility command (GenericDumper) and retrieves
+         OpenOffice documents.
+        """
+        self._memsearch()
 
 
 # ------------------------------- MAIN SECTION --------------------------------
