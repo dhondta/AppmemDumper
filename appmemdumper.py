@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python2
 # -*- coding: UTF-8 -*-
 # --------------------------- DOCUMENTATION SECTION ---------------------------
 __author__ = "Alexandre D'Hondt"
