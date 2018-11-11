@@ -29,13 +29,15 @@ This framework was tested on an Ubuntu 16.04 with Python 2.7.
 
  ```session
  $ sudo apt-get install foremost
+ $ git clone https://github.com/volatilityfoundation/volatility /tmp/vol-setup
+ $ cd /tmp/vol-setup && sudo python setup.py install
  ```
 
  > **Behind a proxy ?**
  > 
  > Do not forget to configure your Network system settings (or manually edit `/etc/apt/apt.conf`).
  
-2. Install from Pip
+2. Install AppMemDumper from Pip
 
  ```session
  $ pip install appmemdumper

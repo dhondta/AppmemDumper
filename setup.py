@@ -20,7 +20,7 @@ setup(
   author_email = "alexandre.dhondt@gmail.com",
   url = "https://github.com/dhondta/AppmemDumper",
   license = "AGPLv3",
-  version = "2.0.1",
+  version = "2.0.2",
   description = "This tool allows to collect various forensics artifacts in "
                 "Windows memory dumps using Volatility and Foremost for common "
                 "Windows applications.",
@@ -37,12 +37,7 @@ setup(
     'License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)',
     'Programming Language :: Python :: 2',
     'Programming Language :: Python :: 2.7',
-    'Programming Language :: Python :: 3.4',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
-    'Programming Language :: Python :: 3.7',
-    'Programming Language :: Python :: 3.8',
   ],
   install_requires=[str(r.req) for r in requirements],
-  python_requires = '>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4',
+  python_requires = '>=2.7,<3',
 )
