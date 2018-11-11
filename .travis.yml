@@ -1,0 +1,24 @@
+language: python
+sudo: required
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - "3.7"
+  - "3.8"
+addons:
+  apt:
+    packages:
+    - foremost
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install python-dev
+  - sudo apt-get install python-pip
+install:
+  - pip install pip setuptools
+  - git clone https://github.com/volatilityfoundation/volatility vol-setup
+  - cd vol-setup && sudo python setup.py install && cd ..
+  - pip install appmemdumper
+script:
+  - app-mem-dumper -h
