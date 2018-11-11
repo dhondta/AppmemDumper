@@ -59,7 +59,5 @@ docs/_build/
 # PyBuilder
 target/
 
-# RPL-Attacks
-.idea
-.vagrant
-tmp
+# Artifacts
+.deprecated
