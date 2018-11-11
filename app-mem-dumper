@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 __author__ = "Alexandre D'Hondt"
-__version__ = "2.0"
+__version__ = "2.0.0"
 __copyright__ = "AGPLv3 (http://www.gnu.org/licenses/agpl.html)"
 __doc__ = """
 This tool automates the research of some artifacts for forensics purpose in
@@ -15,7 +15,7 @@ __examples__ = ["memory.dmp", "my-dumps.tar.gz", "dump.raw -a 0,1 -f"]
 __print__ = "Print documentation:\n- stdout: pydoc {0}\n- html  : pydoc -w {0}"
 
 
-from core import *
+from appmemdumper import *
 from tinyscript import *
 
 

@@ -5,7 +5,6 @@
 ## Table of Contents
 
    * [Introduction](#introduction)
-   * [Design Principles](#design-principles)
    * [System Requirements](#system-requirements)
    * [Installation](#installation)
    * [Quick Start](#quick-start)
@@ -14,23 +13,14 @@
 
 ## Introduction
 
-This self-contained tool automates the research of some artifacts for forensics purpose in memory dumps based upon Volatility for a series of common Windows applications.
+This tool automates the research of some artifacts for forensics purpose in memory dumps based upon Volatility for a series of common Windows applications.
 
 It can also open multiple archive formats. In case of an archive, the tool will extract all its files to a temporary directory and then try to open each file as a memory dump (except files named README or README.md).
-
-
-## Design principles:
-
-- Maximum use of Python-builtin modules.
-- For non-standard imports, trigger exit if not installed and display the command for installing these.
-- No modularity (principle of self-contained tool) so that it can simply be copied in /usr/bin with dependencies other thant the non-standard imports.
 
 
 ## System Requirements
 
 This framework was tested on an Ubuntu 16.04 with Python 2.7.
-
-Its Python logic only uses standard built-in modules except `pyunpack`. It makes calls to Volatility and Foremost, thus requiring them.
 
 
 ## Installation
@@ -63,19 +53,12 @@ Its Python logic only uses standard built-in modules except `pyunpack`. It makes
 3. Install Python requirements
 
  ```session
- $ sudo pip install pyunpack
+ $ pip install -r requirements
  ```
 
  > **Behind a proxy ?**
  > 
  > Do not forget to add option `--proxy=http://[user]:[pwd]@[host]:[port]` to your pip command.
- 
-4. [Facultative] Copy the Python script to your `bin` folder
-
- ```session
- $ chmod a+x appmemdumper.py
- $ sudo cp appmemdumper.py /usr/bin/appmemdumper
- ```
 
 
 ## Quick Start
