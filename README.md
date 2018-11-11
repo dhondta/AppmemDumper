@@ -25,24 +25,9 @@ This framework was tested on an Ubuntu 16.04 with Python 2.7.
 
 ## Installation
 
-1. Clone this repository
+1. Install system requirements
 
  ```session
- $ git clone https://github.com/dhondta/appmemdumper.git
- ```
- 
- > **Behind a proxy ?**
- > 
- > Setting: `git config --global http.proxy http://[user]:[pwd]@[host]:[port]`
- > 
- > Unsetting: `git config --global --unset http.proxy`
- > 
- > Getting: `git config --global --get http.proxy`
-
-2. Install system requirements
-
- ```session
- $ sudo apt-get install volatility
  $ sudo apt-get install foremost
  ```
 
@@ -50,10 +35,10 @@ This framework was tested on an Ubuntu 16.04 with Python 2.7.
  > 
  > Do not forget to configure your Network system settings (or manually edit `/etc/apt/apt.conf`).
  
-3. Install Python requirements
+2. Install from Pip
 
  ```session
- $ pip install -r requirements
+ $ pip install appmemdumper
  ```
 
  > **Behind a proxy ?**
@@ -66,59 +51,64 @@ This framework was tested on an Ubuntu 16.04 with Python 2.7.
 1. Help
 
  ```session
- $ ./appmemdumper.py -h
- 
- usage: appmemdumper [-h] [-a APPS] [-d DUMP_DIR] [-f] [-p PLUGINS]
-                    [-t TEMP_DIR] [-v]
-                    dump
+ $ app-mem-dumper -h
+usage: app-mem-dumper [-h] [-a APPS] [-d DUMP_DIR] [-f] [-p PLUGINS_DIR]
+                      [-t TEMP_DIR] [-v]
+                      dump
 
- Appmemdumper v1.0
- [...]
+AppMemDumper v2.0.0
+Author: Alexandre D'Hondt
 
- positional arguments:
-   dump         memory dump file path
+This tool automates the research of some artifacts for forensics purpose in
+ memory dumps based upon Volatility for a series of common Windows applications.
 
- optional arguments:
-   -h, --help   show this help message and exit
-   -a APPS      comma-separated list of integers designating applications to be parsed (default: *)
-                 Currently supported: 
-                  [0] adobereader
-                  [1] dumpinfo*
-                  [2] firefox
-                  [3] foxitreader
-                  [4] internetexplorer
-                  [5] keepass
-                  [6] mediaplayerclassic
-                  [7] mspaint
-                  [8] notepad
-                  [9] openoffice
-                  [10] pdflite
-                  [11] sumatrapdf
-                  [12] truecrypt
-                  [13] userhashes*
-                  [14] wordpad
-                 (*: general-purpose dumper)
-   -d DUMP_DIR  dump directory (default: ./files/)
-   -f           force profile search, do not use cached profile (default: false)
-   -p PLUGINS   path to the custom plugins directory (default: none)
-   -t TEMP_DIR  temporary directory for decompressed images (default: ./.temp/)
-   -v           verbose mode (default: false)
+It can also open multiple archive formats (it uses pyunpack). In case of an
+ archive, the tool will extract all its files to a temporary directory and then
+ try to open each file as a memory dump.
 
- Usage examples:
-   python appmemdumper memory.dmp
-   python appmemdumper my-dumps.tar.gz
-   python appmemdumper dump.raw -a 0,1 -f
+positional arguments:
+  dump                  memory dump file path
 
- Print documentation:
- - stdout: pydoc appmemdumper
- - html  : pydoc -w appmemdumper
+optional arguments:
+  -h, --help            show this help message and exit
+  -a APPS               comma-separated list of integers designating applications to be parsed (default: *)
+                         Currently supported: 
+                          [0] AdobeReader
+                          [1] DumpInfo*
+                          [2] Firefox
+                          [3] FoxitReader
+                          [4] InternetExplorer
+                          [5] KeePass
+                          [6] MSPaint
+                          [7] MediaPlayerClassic
+                          [8] Notepad
+                          [9] OpenOffice
+                          [10] PDFLite
+                          [11] SumatraPDF
+                          [12] TrueCrypt
+                          [13] UserHashes*
+                          [14] Wordpad
+                         (*: general-purpose dumper)
+  -d DUMP_DIR, --dump-dir DUMP_DIR
+                        dump directory (default: ./files/)
+  -f, --force           force profile search, do not use cached profile (default: false)
+  -p PLUGINS_DIR, --plugins-dir PLUGINS_DIR
+                        path to custom plugins directory (default: none)
+  -t TEMP_DIR, --temp-dir TEMP_DIR
+                        temporary directory for decompressed images (default: ./.temp/)
+  -v                    debug verbose level (default: false)
+
+Usage examples:
+  python app-mem-dumper memory.dmp
+  python app-mem-dumper my-dumps.tar.gz
+  python app-mem-dumper dump.raw -a 0,1 -f
  
  ```
  
 2. Example of output
 
  ```session
- $ ./appmemdumper.py memory.dump -v -p plugins
+ $ app-mem-dumper memory.dump -v -p plugins
  [appmemdumper] XX:XX:XX [DEBUG] Attempting to decompress 'memory.dump'...
  [appmemdumper] XX:XX:XX [DEBUG] Not an archive, continuing...
  [appmemdumper] XX:XX:XX [DEBUG] Setting output directory to 'files/memory.dump'...
