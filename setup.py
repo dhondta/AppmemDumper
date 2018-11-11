@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 from os.path import abspath, dirname, join
-from setuptools import setup
+from setuptools import setup, find_packages
 try: # for pip >= 10
     from pip._internal.req import parse_requirements
 except ImportError: # for pip <= 9.0.3
@@ -15,12 +15,12 @@ with open(join(currdir, 'README.md')) as f:
 requirements = parse_requirements("requirements.txt", session=False)
 setup(
   name = "appmemdumper",
-  packages = ["appmemdumper"],
+  packages = find_packages(),
   author = "Alexandre D\'Hondt",
   author_email = "alexandre.dhondt@gmail.com",
   url = "https://github.com/dhondta/AppmemDumper",
   license = "AGPLv3",
-  version = "2.0.0",
+  version = "2.0.1",
   description = "This tool allows to collect various forensics artifacts in "
                 "Windows memory dumps using Volatility and Foremost for common "
                 "Windows applications.",
