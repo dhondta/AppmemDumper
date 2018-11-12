@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
+import logging
 import os
+import re
+import shutil
 import string
 from collections import deque
-from os.path import isdir, isfile, join, relpath, splitext
-from ..memdump import is_memdump
+from os.path import exists, isdir, isfile, join, relpath, splitext
 
 
 __all__ = ["DumperTemplate"]
+logger = logging.getLogger("main")
 
 
 class DumperTemplate(object):
@@ -42,7 +45,6 @@ class DumperTemplate(object):
         :param name: application name
         :param pids: list of pids corresponding to the application name in dump
         """
-        assert is_memdump(dump)
         assert isinstance(name, str)
         assert isinstance(pids, list) and all(x.isdigit() for x in pids)
         self.dump = dump
@@ -108,12 +110,15 @@ class DumperTemplate(object):
             logger.info("> {}".format(dst))
         return dst
 
-    def _memsearch(self):
+    def _memsearch(self, split_on_nullbyte=False):
         """
         Executes the 'memdump' Volatility command then parse the collected dump
          against used-defined regular expressions.
         Valid patterns structure:
           self.re_patterns := list(tuples(re_pattern, format, short_descr))
+        
+        :param split_on_nullbyte: split the matched string on nullbyte and take
+                                   only the first part
         """
         if not hasattr(self, "re_patterns"):
             logger.warn("No memory search performed (no pattern found)")
@@ -125,7 +130,11 @@ class DumperTemplate(object):
             r = re.compile(pattern, re.M + re.S)
             out = r.search(content)
             if out is not None:
-                self._dump_file(out.group(), 'memdump-{}'.format(descr), fmt)
+                out = out.group()
+                #FIXME: split on nullbyte for each occurrence then join all
+                if split_on_nullbyte:
+                    out = out.split('\x00', 1)[0]
+                self._dump_file(out, 'memdump-{}'.format(descr), fmt)
         os.remove(dump)
 
     def _run(self):
@@ -199,6 +208,33 @@ class DumperTemplate(object):
                 if stop:
                     break
         shutil.rmtree(dump_dir)
+
+    def _yarascan(self, pattern, verbose=True):
+        """
+        Executes the 'yarascan' Volatility command for matching a pattern from
+         the related process memory.
+        
+        :param pattern: yara pattern
+        :param verbose: display the log message after saving the scan result
+        """
+        assert isinstance(pattern, str)
+        assert isinstance(verbose, bool)
+        cmd, pid = 'yarascan', self.dump.config.PID
+        out = self.dump.call(cmd, "-p {} -Y '/{}/'".format(pid, pattern))
+        print(out)
+        if len(out.strip()) == 0:
+            return
+        i = 0
+        dst = join(self.dump.out_dir,
+                   self._resname(pid, cmd + "-{:0<2}".format(i), "txt"))
+        while exists(dst):
+            i += 1
+            dst = join(self.dump.out_dir,
+                       self._resname(pid, cmd + "-{:0<2}".format(i), "txt"))
+        with open(dst, 'wb') as f:
+            f.write(out)
+        if verbose:
+            logger.info("> {}".format(dst))
 
     def carve(self, filepath, types=(), clean=False):
         """
