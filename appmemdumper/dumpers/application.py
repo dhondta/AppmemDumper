@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
+import logging
 from .template import DumperTemplate
-from ..memdump import VolatilityOutputParser
 
 
 __all__ = [
@@ -17,8 +17,10 @@ __all__ = [
     "PDFLite",
     "SumatraPDF",
     "TrueCrypt",
+    "WinWord",
     "Wordpad",
 ]
+logger = logging.getLogger("main")
 
 
 class AdobeReader(DumperTemplate):
@@ -69,13 +71,15 @@ class InternetExplorer(DumperTemplate):
     Dumper for the common application Microsoft Internet Explorer.
     """
     procnames = ["iexplore.exe"]
+    re_patterns = [(r'function FindProxyForURL.{232}', 'txt', 'proxy-rules')]
 
     def run(self):
         """
-        Executes the 'iehistory' Volatility command.
+        Executes some IExplorer-related Volatility command.
         """
         cmd = 'iehistory'
         self._dump_file(self.dump.call(cmd), cmd)
+        self._memsearch(split_on_nullbyte=True)
 
 
 class KeePass(DumperTemplate):
@@ -165,7 +169,7 @@ class Notepad(DumperTemplate):
         out = out.split("******************************\n")
         for result in out[1:]:
             meta, text = result.split("-------------------------\n")
-            pid = VolatilityOutputParser(meta)['Process ID']
+            pid = self.dump.OutputParser(meta)['Process ID']
             if self.dump.config.PID == pid:
                 self._dump_file(text, cmd)
                 return
