@@ -19,11 +19,23 @@ from appmemdumper import *
 from tinyscript import *
 
 
+def list_of_ints(value):
+    """ Parses a comma-separated list of ints. """
+    if value == "all":
+        l = list(range(len(DUMPERS)))
+    else:
+        try:
+            l = list(map(int, value.split(',')))
+        except:
+            raise ValueError("{} could not be parsed".format(value))
+    return [DUMPERS[i] for i in l]
+
+
 if __name__ == '__main__':
     appsl = '\n'.join("  [{}] {}{}".format(i, a, ["", "*"][globals()[a] \
                       .procnames is None]) for i, a in enumerate(DUMPERS))
     parser.add_argument("dump", help="memory dump file path")
-    parser.add_argument("-a", dest="apps", default="*", type=CommaListOfInts,
+    parser.add_argument("-a", dest="apps", default="all", type=list_of_ints,
                         help="comma-separated list of integers designating "
                              "applications to be parsed (default: *)\n Current"
                              "ly supported: \n{}\n (*: general-purpose dumper)"
@@ -41,10 +53,8 @@ if __name__ == '__main__':
     initialize(globals())
     validate(globals(),
         ('dump', "not os.path.isfile( ? )", "Dump file does not exist !"),
-        ('dump_dir', "not os.path.isdir( ? )", "Dump dir does not exist !"),
-        ('plugins_dir', "not os.path.isdir( ? ) or ? is None",
-         "Bad input plugins directory ; setting ignored.", None),
-        ('temp_dir', "not os.path.isdir( ? )", "Temp dir does not exist !"),
+        ('plugins_dir', " ? is not None and not os.path.isdir( ? )",
+         "Bad input plugins directory !"),
     )
     sys.argv = sys.argv[:1]  # remove arguments for avoiding passing them to the
                              #  Volatility API (e.g. -p will cause a clash with
