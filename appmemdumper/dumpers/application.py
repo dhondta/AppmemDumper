@@ -17,7 +17,6 @@ __all__ = [
     "PDFLite",
     "SumatraPDF",
     "TrueCrypt",
-    "WinWord",
     "Wordpad",
 ]
 logger = logging.getLogger("main")
