@@ -1,5 +1,8 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
+import logging
+import os
+import shutil
 import StringIO
 import volatility.addrspace as addrspace
 import volatility.conf as conf
@@ -10,6 +13,7 @@ import volatility.obj as obj
 import volatility.registry as registry
 import volatility.utils as utils
 from copy import deepcopy
+from os.path import abspath, dirname, exists, isdir, isfile
 from subprocess import check_output, CalledProcessError, PIPE, Popen
 from .dumpers import *
 
@@ -20,34 +24,12 @@ except OSError:
     sys.exit(1)
 
 
-__all__ = ["VolatilityMemDump"]
+__all__ = ["DUMPERS", "VolatilityMemDump"]
 CMD = 'volatility {opt} {cmd}'
 
 
 is_memdump = lambda x: isinstance(x, VolatilityMemDump)
-
-
-class VolatilityOutputParser(dict):
-    """
-    Dictionary that parses the output of a Volatility command at creation with:
-     - every colon-separated parameter as a (key, value) pair
-     - other lines under the 'others' key
-    """
-    def __init__(self, output):
-        """
-        Dictionary constructor that parses the Volatility command output.
-
-        :param output: Volatility command output as a string
-        """
-        assert isinstance(output, str)
-        self['others'] = []
-        for line in output.split('\n'):
-            line = line.strip().split(':', 1)
-            if len(line) == 1:
-                if line[0].strip() != '':
-                    self['others'].append(line[0].strip())
-            else:
-                self[line[0].strip()] = line[1].strip()
+logger = logging.getLogger("main")
 
 
 class VolatilityAppDumper(object):
@@ -82,18 +64,18 @@ class VolatilityAppDumper(object):
         #  the related application is handled
         # if no process name was given and there exists a general-purpose dumper
         #  (that has no list of process names), create a dumper
-        for app, cls in DUMPERS:
+        for cls in DUMPERS:
             pnames = globals()[cls].procnames
             if pnames is not None:
                 pnames = [p.lower() for p in pnames]
             if (pname is None and pnames is None) or \
                (pname is not None and pnames is not None and pname in pnames):
-                if app in dump._selected_apps:
+                if cls in dump._selected_apps:
                     if pname is not None:
                         dump._stats[0].append(pname)  # found
-                    name = pname.split('.', 1)[0] if pname is not None else app
+                    name = pname.split('.', 1)[0] if pname is not None else cls
                     self.dumper = globals()[cls](dump, name, pids)
-                    dump.apps[app] = self.dumper
+                    dump.apps[cls] = self.dumper
                 else:
                     if pname is not None:
                         dump._stats[1].append(pname)  # not selected
@@ -113,8 +95,29 @@ class VolatilityMemDump(object):
      VolatilityAppDumper. It also provides a 'dump()' method to trigger the
      dumping of resources with the application dumpers.
     """
+    class OutputParser(dict):
+        """
+        Dictionary that parses the output of a Volatility command at creation with:
+         - every colon-separated parameter as a (key, value) pair
+         - other lines under the 'others' key
+        """
+        def __init__(self, output):
+            """
+            Dictionary constructor that parses the Volatility command output.
+
+            :param output: Volatility command output as a string
+            """
+            assert isinstance(output, str)
+            self['others'] = []
+            for line in output.split('\n'):
+                line = line.strip().split(':', 1)
+                if len(line) == 1:
+                    if line[0].strip() != '':
+                        self['others'].append(line[0].strip())
+                else:
+                    self[line[0].strip()] = line[1].strip()
     parsers = {
-        'imageinfo': lambda o: VolatilityOutputParser(o) \
+        'imageinfo': lambda o: VolatilityMemDump.OutputParser(o) \
                                ["Suggested Profile(s)"].split(", "),
     }
 
@@ -132,14 +135,14 @@ class VolatilityMemDump(object):
                            from a cache file in /tmp or found by Volatility
         """
         short = dump
-        dump = os.path.abspath(dump)
-        assert os.path.isfile(dump)
-        assert all(x in [n for n, _ in DUMPERS] for x in selected_apps)
-        assert plugins_dir is None or os.path.isdir(plugins_dir)
+        dump = abspath(dump)
+        assert isfile(dump)
+        assert all(x in DUMPERS for x in selected_apps)
+        assert plugins_dir is None or isdir(plugins_dir)
         assert isinstance(from_cache, bool)
         self._selected_apps = selected_apps
         logger.debug("Setting output directory to '{}'...".format(out_dir))
-        self.out_dir = os.path.abspath(out_dir)
+        self.out_dir = abspath(out_dir)
         # initialize dump opening
         registry.PluginImporter()
         self.__is_profile_tested = False
@@ -147,7 +150,7 @@ class VolatilityMemDump(object):
         if plugins_dir is not None:
             logger.debug("Setting plugins directory to '{}'..."
                          .format(plugins_dir))
-            self.config.plugins = os.path.abspath(plugins_dir)
+            self.config.plugins = abspath(plugins_dir)
         for cls in [commands.Command, addrspace.BaseAddressSpace]:
             registry.register_global_options(self.config, cls)
         self.__commands = {k.lower(): v for k, v in \
@@ -171,9 +174,9 @@ class VolatilityMemDump(object):
         available_profiles = registry.get_plugin_classes(obj.Profile)
         compatible_profiles = []
         # load profile from cache or use the 'imageinfo' command to find it
-        tmp = "/tmp/{}/profile".format(SCRIPT)
+        tmp = "/tmp/appmemdumper/profile"
         if from_cache:
-            if os.path.isfile(tmp):
+            if isfile(tmp):
                 with open(tmp) as f:
                     self.config.PROFILE = f.read().strip()
                 if not self.__get_pslist():
@@ -201,8 +204,8 @@ class VolatilityMemDump(object):
                          "that your memory dump is supported by Volatility")
             exit_handler(code=2)
         # create a cache file with the profile name
-        if not os.path.isdir(os.path.dirname(tmp)):
-            os.makedirs(os.path.dirname(tmp))
+        if not isdir(dirname(tmp)):
+            os.makedirs(dirname(tmp))
         with open(tmp, 'w') as f:
             f.write(self.config.PROFILE)
         return is_profile_tested
@@ -285,8 +288,8 @@ class VolatilityMemDump(object):
         """
         Dump resources for every known application in the memory dump.
         """
-        if os.path.exists(self.out_dir):
-            shutil.rmtree(self.out_dir) if os.path.isdir(self.out_dir) \
+        if exists(self.out_dir):
+            shutil.rmtree(self.out_dir) if isdir(self.out_dir) \
                 else os.remove(self.out_dir)
         os.makedirs(self.out_dir)
         # run each dumper and collect information messages for guidance
