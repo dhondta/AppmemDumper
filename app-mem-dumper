@@ -65,6 +65,8 @@ if __name__ == '__main__':
     _, args.dump = decompress(args.dump, args.temp_dir)
     from_cache = not args.force
     for dump in args.dump:
+        if not os.path.isfile(dump):
+            continue
         dump_dir = os.path.join(args.dump_dir, os.path.basename(dump))
         VolatilityMemDump(dump, args.apps, dump_dir, args.plugins_dir,
                           from_cache).dump()

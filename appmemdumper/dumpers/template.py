@@ -84,12 +84,13 @@ class DumperTemplate(object):
         if content.strip() == "":
             logger.debug("Empty content, no resource saved")
             return
-        dest = join(self.dump.out_dir,
-                    self._resname(self.dump.config.PID, cmd, fmt))
-        with open(dest, 'wb') as f:
+        d = join(self.dump.out_dir,
+                 self._resname(self.dump.config.PID, cmd, fmt))
+        with open(d, 'wb') as f:
             f.write(content)
         if verbose:
-            logger.info("> {}".format(relpath(dest)))
+            logger.info("> {}".format(relpath(d)))
+        return d
 
     def _memdump(self, verbose=True):
         """

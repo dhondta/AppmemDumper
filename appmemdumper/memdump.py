@@ -136,9 +136,9 @@ class VolatilityMemDump(object):
         """
         short = dump
         dump = abspath(dump)
-        assert isfile(dump)
-        assert all(x in DUMPERS for x in selected_apps)
-        assert plugins_dir is None or isdir(plugins_dir)
+        assert isfile(dump), "{} is not a dump file".format(dump)
+        assert all(x in DUMPERS for x in selected_apps), "Unknown dumper(s)"
+        assert plugins_dir is None or isdir(plugins_dir), "Bad plugins dir"
         assert isinstance(from_cache, bool)
         self._selected_apps = selected_apps
         logger.debug("Setting output directory to '{}'...".format(out_dir))
