@@ -20,7 +20,7 @@ setup(
   author_email = "alexandre.dhondt@gmail.com",
   url = "https://github.com/dhondta/AppmemDumper",
   license = "AGPLv3",
-  version = "2.0.4",
+  version = "2.1.1",
   description = "This tool allows to collect various forensics artifacts in "
                 "Windows memory dumps using Volatility and Foremost for common "
                 "Windows applications.",
