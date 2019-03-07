@@ -5,9 +5,42 @@ from .template import DumperTemplate
 
 
 __all__ = [
+    "CriticalProcessesInfo",
     "DumpInfo",
     "UserHashes",
 ]
+
+
+class CriticalProcessesInfo(DumperTemplate):
+    """
+    Dumper for checking critical processes.
+    """
+    def run(self):
+        kw = {'options': "--output=greptext", 'silentfail': True}
+        pslist, pstree, psscan, psxview = \
+            [self._dump_file(self.dump.call(cmd, **kw), cmd) \
+             for cmd in ['pslist', 'pstree', 'psscan', 'psxview']]
+        info = ""
+        # check for single instance of lsass.exe and services.exe
+        for ps in ["lsass.exe", "services.exe"]:
+            instances = []
+            with open(psscan) as f:
+                for l in f:
+                    l = l.split("|")
+                    if ps in l:
+                        instances += [(l[3], l[4])]  # PID, PPID
+            pids = list(map(lambda x: x[0], instances))
+            with open(psxview) as f:
+                for l in f:
+                    l = l.split("|")
+                    pid = l[3]
+                    if ps in l and pid not in pids:
+                        instances += [(pid, "N/A")]  # PID, PPID
+            if len(instances) > 1:
+                info += "Multiple instances of {} found".format(ps)
+                for pid, ppid in sorted(instances, key=lambda x: int(x[0])):
+                    info += "\n{} (parent: {})".format(pid, ppid)
+                self._dump_file(info, "multiple-{}".format(ps.split(".", 1)[0]))
 
 
 class DumpInfo(DumperTemplate):
