@@ -1,5 +1,8 @@
+[![PyPi](https://img.shields.io/pypi/v/appmemdumper.svg)](https://pypi.python.org/pypi/appmemdumper/)
 [![Build Status](https://travis-ci.org/dhondta/AppmemDumper.svg?branch=master)](https://travis-ci.org/dhondta/AppmemDumper)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.804958.svg)](https://doi.org/10.5281/zenodo.804958)
+[![Python Versions](https://img.shields.io/pypi/pyversions/appmemdumper.svg)](https://pypi.python.org/pypi/appmemdumper/)
+[![License](https://img.shields.io/pypi/l/appmemdumper.svg)](https://pypi.python.org/pypi/appmemdumper/)
 
 
 ## Table of Contents
@@ -58,7 +61,7 @@ usage: app-mem-dumper [-h] [-a APPS] [-d DUMP_DIR] [-f] [-p PLUGINS_DIR]
                       [-t TEMP_DIR] [-v]
                       dump
 
-AppMemDumper v2.0.0
+AppMemDumper v2.1.0
 Author: Alexandre D'Hondt
 
 This tool automates the research of some artifacts for forensics purpose in
@@ -76,20 +79,21 @@ optional arguments:
   -a APPS               comma-separated list of integers designating applications to be parsed (default: *)
                          Currently supported: 
                           [0] AdobeReader
-                          [1] DumpInfo*
-                          [2] Firefox
-                          [3] FoxitReader
-                          [4] InternetExplorer
-                          [5] KeePass
-                          [6] MSPaint
-                          [7] MediaPlayerClassic
-                          [8] Notepad
-                          [9] OpenOffice
-                          [10] PDFLite
-                          [11] SumatraPDF
-                          [12] TrueCrypt
-                          [13] UserHashes*
-                          [14] Wordpad
+                          [1] CriticalProcessesInfo*
+                          [2] DumpInfo*
+                          [3] Firefox
+                          [4] FoxitReader
+                          [5] InternetExplorer
+                          [6] KeePass
+                          [7] MSPaint
+                          [8] MediaPlayerClassic
+                          [9] Notepad
+                          [10] OpenOffice
+                          [11] PDFLite
+                          [12] SumatraPDF
+                          [13] TrueCrypt
+                          [14] UserHashes*
+                          [15] Wordpad
                          (*: general-purpose dumper)
   -d DUMP_DIR, --dump-dir DUMP_DIR
                         dump directory (default: ./files/)
