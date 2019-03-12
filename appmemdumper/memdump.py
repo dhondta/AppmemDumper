@@ -4,6 +4,7 @@ import logging
 import os
 import shutil
 import StringIO
+import sys
 import volatility.addrspace as addrspace
 import volatility.conf as conf
 import volatility.commands as commands
@@ -202,7 +203,7 @@ class VolatilityMemDump(object):
         if not is_profile_tested:
             logger.error("No suitable profile could be found ; please check "
                          "that your memory dump is supported by Volatility")
-            exit_handler(code=2)
+            sys.exit(2)
         # create a cache file with the profile name
         if not isdir(dirname(tmp)):
             os.makedirs(dirname(tmp))

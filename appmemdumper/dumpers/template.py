@@ -7,6 +7,7 @@ import shutil
 import string
 from collections import deque
 from os.path import exists, isdir, isfile, join, relpath, splitext
+from subprocess import Popen, PIPE
 
 
 __all__ = ["DumperTemplate"]

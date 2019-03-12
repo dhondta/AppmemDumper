@@ -4,6 +4,7 @@ import logging
 from os import listdir
 from os.path import abspath, basename, isdir, isfile, join, splitext
 from pyunpack import Archive, PatoolError
+from subprocess import check_output
 
 
 __all__ = ["decompress"]
