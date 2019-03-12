@@ -1,6 +1,6 @@
-Metadata-Version: 3.0
+Metadata-Version: 3.1
 Name: pybots
-Version: 2.1.0
+Version: 2.1.1
 Summary: Forensics artifacts collection in memory dumps based upon Volatility for common Windows applications.
 Home-page: https://github.com/dhondta/AppmemDumper
 Author: Alexandre D'Hondt

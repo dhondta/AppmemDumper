@@ -79,21 +79,22 @@ optional arguments:
   -a APPS               comma-separated list of integers designating applications to be parsed (default: *)
                          Currently supported: 
                           [0] AdobeReader
-                          [1] CriticalProcessesInfo*
-                          [2] DumpInfo*
-                          [3] Firefox
-                          [4] FoxitReader
-                          [5] InternetExplorer
-                          [6] KeePass
-                          [7] MSPaint
-                          [8] MediaPlayerClassic
-                          [9] Notepad
-                          [10] OpenOffice
-                          [11] PDFLite
-                          [12] SumatraPDF
-                          [13] TrueCrypt
-                          [14] UserHashes*
-                          [15] Wordpad
+                          [1] Clipboard*
+                          [2] CriticalProcessesInfo*
+                          [3] DumpInfo*
+                          [4] Firefox
+                          [5] FoxitReader
+                          [6] InternetExplorer
+                          [7] KeePass
+                          [8] MSPaint
+                          [9] MediaPlayerClassic
+                          [10] Notepad
+                          [11] OpenOffice
+                          [12] PDFLite
+                          [13] SumatraPDF
+                          [14] TrueCrypt
+                          [15] UserHashes*
+                          [16] Wordpad
                          (*: general-purpose dumper)
   -d DUMP_DIR, --dump-dir DUMP_DIR
                         dump directory (default: ./files/)
