@@ -5,10 +5,20 @@ from .template import DumperTemplate
 
 
 __all__ = [
+    "Clipboard",
     "CriticalProcessesInfo",
     "DumpInfo",
     "UserHashes",
 ]
+
+
+class Clipboard(DumperTemplate):
+    """
+    Dumper for collecting the content of the clipboard.
+    """
+    def run(self):
+        cmd = "clipboard"
+        self._dump_file(self.dump.call(cmd, silentfail=True), cmd)
 
 
 class CriticalProcessesInfo(DumperTemplate):

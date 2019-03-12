@@ -23,7 +23,7 @@ It can also open multiple archive formats. In case of an archive, the tool will 
 
 ## System Requirements
 
-This framework was tested on an Ubuntu 16.04 with Python 2.7.
+This framework was tested on an Ubuntu 18.04 with Python 2.7.
 
 
 ## Installation
