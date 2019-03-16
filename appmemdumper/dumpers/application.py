@@ -52,9 +52,9 @@ class Firefox(DumperTemplate):
             for cmd in ['firefoxcookies', 'firefoxdownloads', 'firefoxhistory']:
                 self._dump_file(self.dump.call(cmd, "--output=csv"), cmd, 'csv')
         except CalledProcessError:
-            logger.warn("Firefox plugins are not built in Volatility ; please"
-                        " ensure that you used the -p option to set the path"
-                        " to custom plugins.")
+            logger.warning("Firefox plugins are not built in Volatility ;"
+                           " please ensure that you used the -p option to set"
+                           " the path to custom plugins.")
 
 
 class FoxitReader(AdobeReader):

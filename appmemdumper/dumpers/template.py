@@ -123,7 +123,7 @@ class DumperTemplate(object):
                                    only the first part
         """
         if not hasattr(self, "re_patterns"):
-            logger.warn("No memory search performed (no pattern found)")
+            logger.warning("No memory search performed (no pattern found)")
             return
         dump = self._memdump(verbose=False)
         with open(dump) as f:
@@ -186,7 +186,7 @@ class DumperTemplate(object):
         assert isinstance(include_pattern, bool)
         assert isinstance(reduce_text, bool)
         if not hasattr(self, "fmt_patterns"):
-            logger.warn("No VAD search performed (no pattern found)")
+            logger.warning("No VAD search performed (no pattern found)")
             return
         dump_dir = self._vaddump(verbose=False)
         for fn in os.listdir(dump_dir):

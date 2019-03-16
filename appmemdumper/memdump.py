@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 import logging
 import os
+import shlex
 import shutil
 import StringIO
 import sys
@@ -209,6 +210,7 @@ class VolatilityMemDump(object):
             os.makedirs(dirname(tmp))
         with open(tmp, 'w') as f:
             f.write(self.config.PROFILE)
+        logger.info("> Selected profile: {}".format(self.config.PROFILE))
         return is_profile_tested
 
     def __get_pslist(self):
@@ -242,42 +244,50 @@ class VolatilityMemDump(object):
             if len(s) > 0:
                 logger.debug("{}: {}".format(t.ljust(12), ", ".join(s)))
         if len(self.apps) == 0:
-            logger.warn("No application to be handled")
+            logger.warning("No application to be handled")
         return True
 
-    def call(self, command, options=None, parser=None, silentfail=False):
+    def call(self, command, options=None, parser=None, failmode="error"):
         """
         Run Volatility with given command and options using subprocess.
 
         :param command: Volatility command name
         :param options: valid command-related options
         :param parser: None or function for parsing the output
-        :param silentfail: boolean to make the call fail silently or not
+        :param failmode: string indicating the fail mode (error|warn|silent)
         :return: parsed output
         """
         assert isinstance(command, str)
         assert options is None or isinstance(options, str)
         assert parser is None or callable(parser)
-        assert isinstance(silentfail, bool)
+        assert failmode in ["error", "warn", "silent"]
         # compose the list of options with already known and input information
         options = [options] if options is not None else []
         if self.__is_profile_tested:
             options.insert(0, "--profile={}".format(self.config.PROFILE))
         filepath = self.config.LOCATION.split("://", 1)[1]
-        options.insert(0, "--file={}".format(filepath))
+        options.insert(0, "--file=\"{}\"".format(filepath))
         if self.config.plugins is not None and len(self.config.plugins) > 0:
             options.insert(0, "--plugins={}".format(self.config.plugins))
         cmd = CMD.format(cmd=command, opt=" ".join(options))
         # run the resulting command with a subprocess
         logger.debug("> Calling command '{}'...".format(command))
         logger.debug(">> {}".format(cmd))
-        p = Popen(cmd.split(), stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        p = Popen(shlex.split(cmd), stdin=PIPE, stdout=PIPE, stderr=PIPE)
         out, err = p.communicate()
         if "ERROR" in err:
-            if silentfail:
+            if failmode == "silent":
                 return
+            if "You must specify something to do (try -h)" in err:
+                msg = "Plugin does not exist"
             else:
-                logger.error(err.split(":", 1)[1].strip())
+                msg = "({}) {}".format(*map(lambda x: x.strip(),
+                                            err.split(":", 2)[1:3]))
+            if failmode == "warn":
+                logger.warning(msg)
+                return
+            elif failmode == "error":
+                logger.error(msg)
                 raise CalledProcessError(1, cmd)
         out = out.replace('\r\n', '\n')
         # then parse the output with the given parser and return the result
@@ -302,8 +312,8 @@ class VolatilityMemDump(object):
                 msgs[msg].append(n)
         # finally, warn the collected messages
         for m, n in msgs.items():
-            logger.warn("\nThe following applies to collected objects of:\n- {}"
-                        "\n\n{}\n".format("\n- ".join(n), m))
+            logger.warning("\nThe following applies to collected objects of:\n-"
+                           " {}\n\n{}\n".format("\n- ".join(n), m))
             
     def execute(self, command, nopid=False, text=False, parser=None):
         """
