@@ -1,7 +1,7 @@
 #!/usr/bin/python2
 # -*- coding: UTF-8 -*-
 __author__ = "Alexandre D'Hondt"
-__version__ = "2.1.2"
+__version__ = "2.1.3"
 __copyright__ = "AGPLv3 (http://www.gnu.org/licenses/agpl.html)"
 __doc__ = """
 This tool automates the research of some artifacts for forensics purpose in

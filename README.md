@@ -88,13 +88,14 @@ optional arguments:
                           [7] KeePass
                           [8] MSPaint
                           [9] MediaPlayerClassic
-                          [10] Notepad
-                          [11] OpenOffice
-                          [12] PDFLite
-                          [13] SumatraPDF
-                          [14] TrueCrypt
-                          [15] UserHashes*
-                          [16] Wordpad
+                          [10] Mimikatz*
+                          [11] Notepad
+                          [12] OpenOffice
+                          [13] PDFLite
+                          [14] SumatraPDF
+                          [15] TrueCrypt
+                          [16] UserHashes*
+                          [17] Wordpad
                          (*: general-purpose dumper)
   -d DUMP_DIR, --dump-dir DUMP_DIR
                         dump directory (default: ./files/)
