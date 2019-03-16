@@ -56,12 +56,12 @@ This framework was tested on an Ubuntu 18.04 with Python 2.7.
 1. Help
 
  ```session
- $ app-mem-dumper -h
-usage: app-mem-dumper [-h] [-a APPS] [-d DUMP_DIR] [-f] [-p PLUGINS_DIR]
-                      [-t TEMP_DIR] [-v]
+$ app-mem-dumper -h
+usage: app-mem-dumper [-a APPS] [-d DUMP_DIR] [-f] [-p PLUGINS_DIR]
+                      [-t TEMP_DIR] [-h] [-v]
                       dump
 
-AppMemDumper v2.1.0
+AppMemDumper v2.1.3
 Author: Alexandre D'Hondt
 
 This tool automates the research of some artifacts for forensics purpose in
@@ -75,7 +75,6 @@ positional arguments:
   dump                  memory dump file path
 
 optional arguments:
-  -h, --help            show this help message and exit
   -a APPS               comma-separated list of integers designating applications to be parsed (default: *)
                          Currently supported: 
                           [0] AdobeReader
@@ -96,21 +95,24 @@ optional arguments:
                           [15] TrueCrypt
                           [16] UserHashes*
                           [17] Wordpad
-                         (*: general-purpose dumper)
+                         (*: general-purpose dumper) (default: all)
   -d DUMP_DIR, --dump-dir DUMP_DIR
-                        dump directory (default: ./files/)
-  -f, --force           force profile search, do not use cached profile (default: false)
+                        dump directory (default: ./files/) (default: files)
+  -f, --force           force profile search, do not use cached profile (default: false) (default: False)
   -p PLUGINS_DIR, --plugins-dir PLUGINS_DIR
-                        path to custom plugins directory (default: none)
+                        path to custom plugins directory (default: none) (default: None)
   -t TEMP_DIR, --temp-dir TEMP_DIR
-                        temporary directory for decompressed images (default: ./.temp/)
-  -v                    debug verbose level (default: false)
+                        temporary directory for decompressed images (default: ./.temp/) (default: .temp)
+
+extra arguments:
+  -h, --help            show this help message and exit
+  -v, --verbose         verbose mode (default: False)
 
 Usage examples:
   python app-mem-dumper memory.dmp
   python app-mem-dumper my-dumps.tar.gz
   python app-mem-dumper dump.raw -a 0,1 -f
- 
+
  ```
  
 2. Example of output
