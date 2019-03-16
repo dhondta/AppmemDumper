@@ -8,6 +8,7 @@ __all__ = [
     "Clipboard",
     "CriticalProcessesInfo",
     "DumpInfo",
+    "Mimikatz",
     "UserHashes",
 ]
 
@@ -17,8 +18,11 @@ class Clipboard(DumperTemplate):
     Dumper for collecting the content of the clipboard.
     """
     def run(self):
-        cmd = "clipboard"
-        self._dump_file(self.dump.call(cmd, silentfail=True), cmd)
+        out = self.dump.call("clipboard", failmode="warn")
+        if len(out.split('\n')) > 3:
+            self._dump_file(out, "content")
+        else:
+            logger.debug("Empty content, no resource saved")
 
 
 class CriticalProcessesInfo(DumperTemplate):
@@ -26,7 +30,8 @@ class CriticalProcessesInfo(DumperTemplate):
     Dumper for checking critical processes.
     """
     def run(self):
-        kw = {'options': "--output=greptext", 'silentfail': True}
+        self.dump.config.PID = None
+        kw = {'options': "--output=greptext", 'failmode': "silent"}
         pslist, pstree, psscan, psxview = \
             [self._dump_file(self.dump.call(cmd, **kw), cmd) \
              for cmd in ['pslist', 'pstree', 'psscan', 'psxview']]
@@ -62,7 +67,16 @@ class DumpInfo(DumperTemplate):
         Executes a series of informational Volatility commands.
         """
         for cmd in ['crashinfo', 'hibinfo', 'vboxinfo', 'vmwareinfo']:
-            self._dump_file(self.dump.call(cmd, silentfail=True), cmd)
+            self._dump_file(self.dump.call(cmd, failmode="silent"), cmd)
+
+
+class Mimikatz(DumperTemplate):
+    """
+    Dumper for collecting user passwords present in memory.
+    """
+    def run(self):
+        cmd = "mimikatz"
+        self._dump_file(self.dump.call(cmd, failmode="warn"), cmd)
 
 
 class UserHashes(DumperTemplate):
