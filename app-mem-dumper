@@ -1,9 +1,10 @@
 #!/usr/bin/python2
 # -*- coding: UTF-8 -*-
-__author__ = "Alexandre D'Hondt"
-__version__ = "2.1.3"
-__copyright__ = "AGPLv3 (http://www.gnu.org/licenses/agpl.html)"
-__doc__ = """
+__author__    = "Alexandre D'Hondt"
+__version__   = "2.1.3"
+__copyright__ = "A. D'Hondt"
+__license__   = "agpl-3.0"
+__doc__       = """
 This tool automates the research of some artifacts for forensics purpose in
  memory dumps based upon Volatility for a series of common Windows applications.
 
@@ -11,7 +12,7 @@ It can also open multiple archive formats (it uses pyunpack). In case of an
  archive, the tool will extract all its files to a temporary directory and then
  try to open each file as a memory dump.
 """
-__examples__ = ["memory.dmp", "my-dumps.tar.gz", "dump.raw -a 0,1 -f"]
+__examples__  = ["memory.dmp", "my-dumps.tar.gz", "dump.raw -a 0,1 -f"]
 __print__ = "Print documentation:\n- stdout: pydoc {0}\n- html  : pydoc -w {0}"
 
 
