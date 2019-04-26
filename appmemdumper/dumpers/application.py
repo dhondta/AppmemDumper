@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 import logging
+from subprocess import CalledProcessError
+
 from .template import DumperTemplate
 
 
