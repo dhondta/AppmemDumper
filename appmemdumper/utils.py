@@ -7,7 +7,7 @@ from pyunpack import Archive, PatoolError
 from subprocess import check_output
 
 
-__all__ = ["decompress"]
+__all__ = ["decompress", "two_columns"]
 logger = logging.getLogger("main")
 
 ARCHIVE_EXCL = lambda f: basename(f) in ["README", "README.md"] or \
@@ -67,3 +67,16 @@ def decompress(filename, temp_dir):
     # retrieve the list of extracted files
     return True, [join(tmp_dir, fn) for fn in listdir(tmp_dir) \
                   if not ARCHIVE_EXCL(fn)]
+
+
+def two_columns(lines):
+    """
+    Output a list of lines in two columns.
+    
+    :param lines: list of lines
+    :return: list of lines in two columns
+    """
+    n = len(lines) / 2 + len(lines) % 2
+    w = max(map(len, lines))
+    return [("{: <%d}{}" % ((w / 4 + 1) * 4)).format(l1, l2) for l1, l2 in \
+            zip(lines[:n], lines[n:] + [""] * (len(lines) % 2))]
