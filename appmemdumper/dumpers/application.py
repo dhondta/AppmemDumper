@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-import logging
-from subprocess import CalledProcessError
-
 from .template import DumperTemplate
 
 
 __all__ = [
     "AdobeReader",
+    "Chrome",
     "Firefox",
     "FoxitReader",
     "InternetExplorer",
@@ -18,10 +16,10 @@ __all__ = [
     "OpenOffice",
     "PDFLite",
     "SumatraPDF",
+    "Thunderbird",
     "TrueCrypt",
     "Wordpad",
 ]
-logger = logging.getLogger("main")
 
 
 class AdobeReader(DumperTemplate):
@@ -37,7 +35,22 @@ class AdobeReader(DumperTemplate):
         Executes the 'memdump' Volatility command (DumperTemplate), carves PDF
          files with Foremost then removes the process memory dump.
         """
-        self.carve(self._memdump(verbose=False), ('pdf',), clean=True)
+        self.carve("pdf", clean=True)
+
+
+class Chrome(DumperTemplate):
+    """
+    Dumper for the common application Google Chrome.
+    """
+    procnames = ["chrome.exe"]
+
+    def run(self):
+        """
+        Executes the Chrome-related Volatility community plugins.
+        """
+        self.commands('chromehistory', 'chromevisits', 'chromedownloadchains',
+                      'chromesearchterms', 'chromedownloads', 'chromecookies',
+                      options="--output=csv", failmode="warn")
 
 
 class Firefox(DumperTemplate):
@@ -45,18 +58,14 @@ class Firefox(DumperTemplate):
     Dumper for the common application Mozilla Firefox.
     """
     procnames = ["firefox.exe"]
+    only_parent = True
 
     def run(self):
         """
         Executes the Firefox-related Volatility community plugins.
         """
-        try:
-            for cmd in ['firefoxcookies', 'firefoxdownloads', 'firefoxhistory']:
-                self._dump_file(self.dump.call(cmd, "--output=csv"), cmd, 'csv')
-        except CalledProcessError:
-            logger.warning("Firefox plugins are not built in Volatility ;"
-                           " please ensure that you used the -p option to set"
-                           " the path to custom plugins.")
+        self.commands('firefoxcookies', 'firefoxdownloads', 'firefoxhistory',
+                      header=1, options="--output=csv", failmode="warn")
 
 
 class FoxitReader(AdobeReader):
@@ -72,15 +81,15 @@ class InternetExplorer(DumperTemplate):
     Dumper for the common application Microsoft Internet Explorer.
     """
     procnames = ["iexplore.exe"]
-    re_patterns = [(r'function FindProxyForURL.{232}', 'txt', 'proxy-rules')]
+    re_patterns = [(r'function FindProxyForURL.{232}', 'txt', 'proxy-rules'),
+                   (r'Client UrlCache}', 'txt', 'urlcache')]
 
     def run(self):
         """
         Executes some IExplorer-related Volatility command.
         """
-        cmd = 'iehistory'
-        self._dump_file(self.dump.call(cmd), cmd)
-        self._memsearch(split_on_nullbyte=True)
+        self.commands('iehistory')
+        self.memsearch(split_on_nullbyte=True)
 
 
 class KeePass(DumperTemplate):
@@ -107,8 +116,8 @@ class KeePass(DumperTemplate):
          some XML content, then executes the 'vaddump' Volatility command and
          finally gets the KeePass DB from the VAD nodes.
         """
-        self._memsearch()
-        self._vadsearch(include_pattern=True)
+        self.memsearch()
+        self.vadsearch(include_pattern=True)
 
 
 class MediaPlayerClassic(DumperTemplate):
@@ -120,7 +129,7 @@ class MediaPlayerClassic(DumperTemplate):
     messages = DumperTemplate._predef_messages[0:1]
 
     def run(self):
-        self._memdump()
+        self.memdump()
 
 
 class MSPaint(DumperTemplate):
@@ -133,7 +142,7 @@ class MSPaint(DumperTemplate):
     messages = DumperTemplate._predef_messages[0:1]
 
     def run(self):
-        self._memdump()
+        self.memdump()
 
 
 class Notepad(DumperTemplate):
@@ -155,28 +164,26 @@ class Notepad(DumperTemplate):
         if not hasattr(self, "_no_notepad"):
             cmd = 'notepad'
             try:
-                out = self.dump.execute(cmd, text=True)
-                text = out.split("Text:\n", 1)[1]
-                self._dump_file(text, cmd)
+                out = self.execute(cmd, text=True).split("Text:\n", 1)[1]
+                self.save(out, self.result(cmd))
                 return
             except IndexError:
-                logger.debug("Nothing found with 'notepad'")
+                self.logger.debug("Nothing found with 'notepad'")
             except:
-                logger.debug("'notepad' does not support the current profile")
+                self.logger.debug("'notepad' is not supported for this profile")
                 self._no_notepad = True
         # Try 2: use 'editbox'
         cmd = 'editbox'
-        out = self.dump.execute(cmd, text=True)
+        out = self.execute(cmd, text=True)
         out = out.split("******************************\n")
         for result in out[1:]:
             meta, text = result.split("-------------------------\n")
-            pid = self.dump.OutputParser(meta)['Process ID']
-            if self.dump.config.PID == pid:
-                self._dump_file(text, cmd)
+            if self.has(self.parse(meta)['Process ID']):
+                self.save(text, self.result(cmd))
                 return
-        logger.debug("Nothing found with 'editbox'")
+        self.logger.debug("Nothing found with 'editbox'")
         # Try 3: use 'vaddump' and search for patterns in VAD nodes
-        self._vadsearch(reduce_text=True)
+        self.vadsearch(reduce_text=True)
 
 
 class OpenOffice(DumperTemplate):
@@ -216,7 +223,7 @@ class OpenOffice(DumperTemplate):
         Executes the 'memdump' Volatility command (DumperTemplate) and retrieves
          OpenOffice documents.
         """
-        self._memsearch()
+        self.memsearch()
 
 
 class PDFLite(AdobeReader):
@@ -235,6 +242,21 @@ class SumatraPDF(AdobeReader):
     procnames = ["SumatraPDF.exe"]
 
 
+class Thunderbird(DumperTemplate):
+    """
+    Dumper for the common application Thunderbird.
+    """
+    procnames = ["thunderbird.ex", "thunderbird.exe"]
+    messages = ["You can grep the .dmp file on common email-related keywords "
+                "(e.g. From, To, ...)"]
+
+    def run(self):
+        """
+        Executes the 'memdump' Volatility command.
+        """
+        self.memdump()
+
+
 class TrueCrypt(DumperTemplate):
     """
     Dumper for the common application TrueCrypt.
@@ -246,20 +268,18 @@ class TrueCrypt(DumperTemplate):
         Executes the 'memdump' Volatility command (DumperTemplate) and the
          TrueCrypt-related Volatility commands.
         """
-        self._memdump()
-        for cmd in ['truecryptmaster', 'truecryptpassphrase',
-                    'truecryptsummary']:
-            self._dump_file(self.dump.call(cmd), cmd)
+        self.memdump()
+        self.commands('truecryptmaster', 'truecryptpassphrase',
+                      'truecryptsummary')
 
 
 class Wordpad(DumperTemplate):
     """
     Dumper for the well-known application Wordpad built in Microsoft Windows. It
-     uses the 'run()' method of DumperTemplate to extract the memory of the
-     process for further analysis using the 'memdump' Volatility command. It
-     also uses the 'carve()' method of DumperTemplate to extract image resources
-     and executes the 'vaddump' Volatility command for retrieving Virtual
-     Address Descriptor (VAD) objects for later manual analysis.
+     extracts process' memory using the 'memdump' command. It uses the 'carve()'
+     method of DumperTemplate to extract image resources and executes the
+     'vaddump' command for retrieving Virtual Address Descriptor (VAD) objects
+     for later manual analysis.
     """
     procnames = ["wordpad.exe"]
     messages = DumperTemplate._predef_messages[0:2]
@@ -269,6 +289,6 @@ class Wordpad(DumperTemplate):
         Executes the 'memdump' Volatility command (DumperTemplate), carves files
          with Foremost then executes the 'editbox' Volatility command.
         """
-        self.carve(self._memdump(verbose=False), ('jpg', 'png',), clean=True)
+        self.carve("jpg", "png", clean=True)
         # TODO: find patterns for searching into the VAD nodes
-        # self._vaddump()
+        self.vaddump()
