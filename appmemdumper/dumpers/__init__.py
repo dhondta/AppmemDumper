@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 from .application import *
-from .general import *
+from .system import *
 from .template import *
 
 from .application import __all__ as apps
-from .general import __all__ as gens
-from .general import __all__ as temp
+from .system import __all__ as syst
 
 
-DUMPERS = sorted(apps + gens)
-__all__ = ["DUMPERS"] + temp + DUMPERS
+APPDUMPERS = sorted(apps)
+SYSDUMPERS = sorted(syst)
+__all__ = ["APPDUMPERS", "SYSDUMPERS"] + APPDUMPERS + SYSDUMPERS

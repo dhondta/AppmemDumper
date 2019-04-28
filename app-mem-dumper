@@ -12,7 +12,8 @@ It can also open multiple archive formats (it uses pyunpack). In case of an
  archive, the tool will extract all its files to a temporary directory and then
  try to open each file as a memory dump.
 """
-__examples__  = ["memory.dmp", "my-dumps.tar.gz", "dump.raw -a 0,1 -f"]
+__examples__  = ["memory.dmp", "my-dumps.tar.gz", "dumps.zip -g all",
+                 "dump.raw -a 1,2,4 -f", "dump.mem -a 0,3,10,11 -g 0"]
 __print__ = "Print documentation:\n- stdout: pydoc {0}\n- html  : pydoc -w {0}"
 
 
@@ -20,43 +21,67 @@ from appmemdumper import *
 from tinyscript import *
 
 
-def list_of_ints(value):
-    """ Parses a comma-separated list of ints. """
-    if value == "all":
-        l = list(range(len(DUMPERS)))
-    else:
+def at_exit():
+    # clean the extracted files' folder
+    logger.debug("Removing temporary files...")
+    try:
+        shutil.rmtree(args.temp_dir)
+    except OSError:
+        pass
+
+
+def at_interrupt():
+    logger.warning("Interrupted by user")
+
+
+def list_of(dumpers):
+    """ Parses a comma-separated list of ints matching selected dumpers. """
+    def _wrapper(value):
+        if value.lower() in ["", "[]", "none"]:
+            return []
         try:
-            l = list(map(int, value.split(',')))
+            l = list(range(len(dumpers))) if value == "all" else pos_ints(value)
+            return [dumpers[i] for i in l]
         except:
             raise ValueError("{} could not be parsed".format(value))
-    return [DUMPERS[i] for i in l]
+    return _wrapper
 
 
 if __name__ == '__main__':
-    appsl = '\n'.join("  [{}] {}{}".format(i, a, ["", "*"][globals()[a] \
-                      .procnames is None]) for i, a in enumerate(DUMPERS))
+    appl = '\n'.join(two_columns(["  [{}] {}".format(i, a) for i, a in \
+                                  enumerate(APPDUMPERS)]))
+    sysl = '\n'.join(two_columns(["  [{}] {}".format(i, g) for i, g in \
+                                  enumerate(SYSDUMPERS)]))
     parser.add_argument("dump", help="memory dump file path")
-    parser.add_argument("-a", dest="apps", default="all", type=list_of_ints,
+    parser.add_argument("-a", dest="apps", default="all",
+                        type=list_of(APPDUMPERS),
                         help="comma-separated list of integers designating "
-                             "applications to be parsed (default: *)\n Current"
-                             "ly supported: \n{}\n (*: general-purpose dumper)"
-                             .format(appsl))
+                             "applications to be parsed\n Currently supported:"
+                             " \n{}\n".format(appl))
     parser.add_argument("-d", "--dump-dir", dest="dump_dir", default="files",
-                        help="dump directory (default: ./files/)")
+                        help="dump directory")
     parser.add_argument("-f", "--force", dest="force", action="store_true",
-                        help="force profile search, do not use cached profile"
-                             " (default: false)")
-    parser.add_argument("-p", "--plugins-dir", dest="plugins_dir",
-                        help="path to custom plugins directory (default: none)")
+                        help="force profile search, do not use cached profile")
+    parser.add_argument("-p", "--plugins-dir", dest="plugins",
+                        help="path to custom plugins directory")
+    parser.add_argument("-s", dest="syst", default="none",
+                        type=list_of(SYSDUMPERS),
+                        help="comma-separated list of integers designating "
+                             "system items to be parsed\n Currently supported:"
+                             " \n{}\n".format(sysl))
     parser.add_argument("-t", "--temp-dir", dest="temp_dir", default=".temp",
-                        help="temporary directory for decompressed images"
-                             " (default: ./.temp/)")
+                        help="temporary directory for decompressed images")
+    parser.add_argument("-u", "--update", action="store_true",
+                        help="update previous dump directories")
     initialize(globals())
     validate(globals(),
         ('dump', "not os.path.isfile( ? )", "Dump file does not exist !"),
-        ('plugins_dir', " ? is not None and not os.path.isdir( ? )",
+        ('plugins', " ? is not None and not os.path.isdir( ? )",
          "Bad input plugins directory !"),
     )
+    if len(args.apps) == 0 and len(args.syst) == 0:
+        logger.warning("No dumper selected")
+        sys.exit(0)
     sys.argv = sys.argv[:1]  # remove arguments for avoiding passing them to the
                              #  Volatility API (e.g. -p will cause a clash with
                              #  the PID option of Volatility)
@@ -69,10 +94,8 @@ if __name__ == '__main__':
         if not os.path.isfile(dump):
             continue
         dump_dir = os.path.join(args.dump_dir, os.path.basename(dump))
-        VolatilityMemDump(dump, args.apps, dump_dir, args.plugins_dir,
-                          from_cache).dump()
+        VolatilityMemDump(dump, args.apps, args.syst, dump_dir, args.plugins,
+                          from_cache).dump(args.update)
         # if archive, assume that every other dump has the same profile as
         #  the first one in order to spare time
         from_cache = True
-    # clean the extracted files' folder
-    shutil.rmtree(args.temp_dir)
