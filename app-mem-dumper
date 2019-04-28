@@ -1,7 +1,7 @@
 #!/usr/bin/python2
 # -*- coding: UTF-8 -*-
 __author__    = "Alexandre D'Hondt"
-__version__   = "2.1.5"
+__version__   = "2.3.0"
 __copyright__ = "A. D'Hondt"
 __license__   = "agpl-3.0"
 __doc__       = """
