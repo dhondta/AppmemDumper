@@ -6,8 +6,8 @@ import re
 import shutil
 import string
 from collections import deque
-from os.path import exists, isdir, isfile, join, relpath, splitext
-from subprocess import Popen, PIPE
+from os.path import dirname, exists, isdir, isfile, join, relpath, splitext
+from subprocess import CalledProcessError, Popen, PIPE
 
 
 __all__ = ["DumperTemplate"]
@@ -37,25 +37,58 @@ class DumperTemplate(object):
                       # any particular process name, meaning that a dumper
                       # inheriting this class without redefining procnames will
                       # be processed regardless of the process list
+    only_parent = False
 
-    def __init__(self, dump, name, pids):
+    def __init__(self, dump, pids):
         """
         Simple constructor for setting base attributes.
 
         :param dump: VolatilityMemDump instance
-        :param name: application name
         :param pids: list of pids corresponding to the application name in dump
         """
-        assert isinstance(name, str)
         assert isinstance(pids, list) and all(x.isdigit() for x in pids)
         self.dump = dump
+        self.logger = logger
+        self.name = self.__class__.__name__
         self.pids = pids
-        self._resname = lambda p, c, f=None: (name.lower() + "{}-{}{}") \
-                                .format(["-{}".format(p), ""][p is None], c, \
-                                        [".{}".format(f), ""][f is None])
+        self._filter_pids()
         self.__nopid = []
+        if not hasattr(self.__class__, "missing_plugins"):
+            self.__class__.missing_plugins = []
+    
+    def _filter_pids(self):
+        """
+        Filter out child PID's of processes whose own and parent procnames are
+         in self.procnames.
+        """
+        if self.only_parent:
+            for k, v in self.ppids.items():
+                ppid, ppname = k
+                for pid, pname in v:
+                    if ppname == pname:
+                        try:
+                            self.pids.remove(pid)
+                        except ValueError:
+                            continue
 
-    def _dump_dir(self, *subdirs):
+    def _is_processed(self, pid=None):
+        """
+        Check if this dumper was already processed for the given PID relying on
+         a cache file.
+         
+        :param pid: PID (if any)
+        :return: True if dumper already processed
+        """
+        if self._update:
+            with open(self.dump._cachefile) as f:
+                dumpers = f.read().splitlines()[1:]
+            name = self.name if pid is None else "{}-{}".format(self.name, pid)
+            if name in dumpers:
+                self.logger.debug("> Already processed ; nothing to update")
+                return True
+        return False
+
+    def _makedir(self, *subdirs):
         """
         Compose the dump directory path and create it if it does not exist.
 
@@ -63,37 +96,142 @@ class DumperTemplate(object):
         :return: the dump directory path as a single string
         """
         assert all(isinstance(x, str) for x in subdirs)
-        d = join(self.dump.out_dir, *subdirs)
-        if not isdir(d):
-            os.makedirs(d)
-        return d
+        dst = join(self.dump.out_dir, *subdirs)
+        if not isdir(dst):
+            os.makedirs(dst)
+        return dst
 
-    def _dump_file(self, content, cmd, fmt="txt", verbose=True):
+    def _run(self, update=False):
         """
-        Save a resource to a destination respecting naming conventions.
-
-        :param res: resource file to be saved
-        :param pid: PID from which the resource was extracted
-        :param cmd: Volatility command used to extract the resource
-        :param fmt: extension of the destination resource
+        Consecutively execute the public 'run()' method on each PID from the
+         pids list.
+        
+        :param update: update output directory (meaning that collected pieces of
+                        information should not be recollected using Volatility
+                        commands)
+        :return: list of messages (if any) associated to this dumper
         """
-        content = content or ""
-        assert isinstance(content, str)
-        assert isinstance(cmd, str)
-        assert isinstance(fmt, str)
-        assert isinstance(verbose, bool)
-        if content.strip() == "":
-            logger.debug("Empty content, no resource saved")
-            return
-        d = join(self.dump.out_dir,
-                 self._resname(self.dump.config.PID, cmd, fmt))
-        with open(d, 'wb') as f:
-            f.write(content)
-        if verbose:
-            logger.info("> {}".format(relpath(d)))
-        return d
+        self._update, n = update, self.name
+        # applies to system dumpers
+        if len(self.pids) == 0:
+            if not self._is_processed():
+                logger.debug("Dumping information...")
+                self.run()
+                self.dump._update_cache(dumper=n)
+        else:
+            for pid in self.pids:
+                if not self._is_processed(pid):
+                    logger.debug("Dumping for PID {}...".format(pid))
+                    self.dump.config.PID = pid
+                    self.run()
+                    self.dump._update_cache(dumper="{}-{}".format(n, pid))
+        return self.messages
+    
+    @property
+    def pid(self):
+        """
+        Dummy shortcut property to self.dump.config.PID.
+        """
+        _ = self.dump.config.PID
+        return _ if _ in self.pids else None
+    
+    @property
+    def ppids(self):
+        """
+        Dummy shortcut property to self.dump.ppids.
+        """
+        return self.dump.ppids
+    
+    def call(self, *args, **kwargs):
+        """
+        Dummy shortcut to self.dump.call.
+        """
+        return self.dump.call(*args, **kwargs)
 
-    def _memdump(self, verbose=True):
+    def carve(self, *types, **kwargs):
+        """
+        Carve files of given types from the input resource with Foremost.
+
+        :param types: list of extensions to be carved from the resource
+        :param clean: remove dump file after processing
+        """
+        clean = kwargs.pop('clean', False)
+        assert all(isinstance(x, str) for x in types)
+        assert isinstance(clean, bool)
+        fp = self.memdump(verbose=False)
+        logger.debug("> Carving with Foremost...")
+        folder, _ = splitext(fp)
+        opt = ["", "-t {}".format(",".join(types))][len(types) > 0]
+        cmd = "foremost {} -o {} {}".format(fp, folder, opt)
+        logger.debug(">> {}".format(cmd))
+        self.shell(cmd)
+        with open(join(folder, "audit.txt")) as f:
+            disp = False
+            for line in f.readlines():
+                line = line.strip()
+                if "Finish:" in line:
+                    break
+                if all([x in line for x in ("Num", "Name", "Size", "Comment")]):
+                    disp = True
+                if disp and len(line) > 0 and ":" in line:
+                    fn = line.split(":", 1)[1].strip().split()[0]
+                    _, ext = splitext(fn)
+                    fp = join(folder, ext[1:], fn)
+                    logger.info("> {}".format(fp))
+        if clean:
+            os.remove(fp)
+    
+    def commands(self, *cmds, **kwargs):
+        """
+        Call multiple Volatility commands on the associated dump with the given
+         options and save the results.
+        """
+        fmt = kwargs.pop('fmt', None)
+        options = kwargs.pop('options', None)
+        save = kwargs.pop('save', True)
+        verbose = kwargs.pop('verbose', True)
+        header = kwargs.pop('header', 0)
+        res = []
+        for cmd in cmds:
+            if cmd in self.__class__.missing_plugins:
+                continue
+            # commands can be defined as 'command' or '(command, options)'
+            if isinstance(cmd, tuple):
+                cmd, opt = cmd
+            else:
+                opt = None or options
+            # handle options separately
+            out = self.call(cmd, opt, **kwargs)
+            if out is None:
+                self.__class__.missing_plugins.append(cmd)
+                res.append(None)
+                continue
+            if save:
+                # adapt output format if necessary
+                _ = "--output="
+                if fmt is None and opt is not None and _ in opt:
+                    fmt = filter(lambda x: _ in x, opt.split())[0].split('=')[1]
+                else:
+                    fmt = "txt"
+                dst = self.result(cmd, fmt)
+                res.append(self.save(out, dst, verbose, header))
+            else:
+                res.append(out)
+        return tuple(res)
+    
+    def execute(self, *args, **kwargs):
+        """
+        Dummy shortcut to self.dump.execute.
+        """
+        return self.dump.execute(*args, **kwargs)
+    
+    def has(self, pid):
+        """
+        Dummy function to verify if input PID matches dumper's associated one.
+        """
+        return self.pid == pid
+
+    def memdump(self, verbose=True):
         """
         Executes the 'memdump' Volatility command for extracting the related
          process memory.
@@ -102,20 +240,22 @@ class DumperTemplate(object):
         :return: path to the process memory dump
         """
         assert isinstance(verbose, bool)
-        cmd, pid = 'memdump', self.dump.config.PID
-        out = self.dump.call(cmd,
-            "-p {} --dump-dir {}".format(pid, self.dump.out_dir))
-        src = join(self.dump.out_dir, "{}.dmp".format(pid))
-        dst = join(self.dump.out_dir, self._resname(pid, cmd, "data"))
+        cmd = 'memdump'
+        dst = self.result(cmd, "data")
+        if self._update and exists(dst):
+            return dst
+        out = self.call(cmd, "-p {} --dump-dir {}"
+                             .format(self.pid, self.dump.out_dir))
+        src = join(self.dump.out_dir, "{}.dmp".format(self.pid))
         shutil.move(src, dst)
         if verbose:
             logger.info("> {}".format(dst))
         return dst
 
-    def _memsearch(self, split_on_nullbyte=False):
+    def memsearch(self, split_on_nullbyte=False):
         """
         Executes the 'memdump' Volatility command then parse the collected dump
-         against used-defined regular expressions.
+         against user-defined regular expressions.
         Valid patterns structure:
           self.re_patterns := list(tuples(re_pattern, format, short_descr))
         
@@ -125,7 +265,7 @@ class DumperTemplate(object):
         if not hasattr(self, "re_patterns"):
             logger.warning("No memory search performed (no pattern found)")
             return
-        dump = self._memdump(verbose=False)
+        dump = self.memdump(verbose=False)
         with open(dump) as f:
             content = f.read()
         for pattern, fmt, descr in self.re_patterns:
@@ -136,25 +276,84 @@ class DumperTemplate(object):
                 #FIXME: split on nullbyte for each occurrence then join all
                 if split_on_nullbyte:
                     out = out.split('\x00', 1)[0]
-                self._dump_file(out, 'memdump-{}'.format(descr), fmt)
+                self.save(out, self.result('memdump-{}'.format(descr), fmt))
         os.remove(dump)
-
-    def _run(self):
+    
+    def parse(self, output):
         """
-        Consecutively execute the public 'run()' method on each PID from the
-         pids list.
-        """
-        if len(self.pids) == 0:
-            logger.debug("Dumping information...")
-            self.run()
-        else:
-            for pid in self.pids:
-                logger.debug("Dumping for PID {}...".format(pid))
-                self.dump.config.PID = pid
-                self.run()
-        return self.messages
+        Dummy shortcut to self.dump.OutputParser.
 
-    def _vaddump(self, verbose=True):
+        :param output: Volatility command output as a string
+        """
+        return self.dump.OutputParser(output)
+    
+    def result(self, cmd, fmt=None):
+        """
+        Compose the resource path depending on the executed command and given
+         format.
+        
+        :param cmd: Volatility command name
+        :param fmt: output format extension
+        :return: relative resource path
+        """
+        _ = self.name.lower() + "{}-{}{}"
+        _ = _.format(["-{}".format(self.pid), ""][self.pid is None], cmd,
+                     [".{}".format(fmt), ""][fmt is None])
+        return join(self.dump.out_dir, _)
+
+    def run(self):
+        """
+        Executes the 'memdump' Volatility command for extracting the related
+         process memory.
+        Public run method to be overridden for the operations to be applied to
+         the related application.
+
+        :param verbose: display the log message after saving the memory dump
+        """
+        raise NotImplementedError("Subclass GenericDumper and override run()")
+
+    def save(self, content, dst, verbose=True, header=0):
+        """
+        Save a resource to a destination according to naming conventions.
+
+        :param content: content to be saved
+        :param dst: relative resource path
+        :param verbose: verbose mode
+        :param header: number of heading rows to be considered
+        :return: path where the file was saved
+        """
+        content = content or ""
+        assert isinstance(content, str)
+        assert isinstance(verbose, bool)
+        content = content.strip()
+        if content == "" or len(content.split('\n')) == header:
+            logger.debug("Empty content, no resource saved")
+            return
+        with open(dst, 'wb+') as f:
+            f.write(content)
+        if verbose:
+            logger.info("> {}".format(relpath(dst)))
+        return dst
+    
+    def shell(self, cmd, clean=False):
+        """
+        Executes an OS command.
+        
+        :param cmd: command line as text
+        :return: stdout, stderr
+        """
+        cmd = cmd.split()
+        try:
+            p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            out, err = p.communicate()
+            if clean and isfile(cmd[-1]):
+                os.remove(cmd[-1])
+            return out, err
+        except CalledProcessError:
+            logger.error("Command '{}' failed".format(cmd))
+            return None, None
+
+    def vaddump(self, verbose=True):
         """
         Executes the 'vaddump' Volatility command for extracting the VAD tree
          for a given process.
@@ -163,14 +362,13 @@ class DumperTemplate(object):
         :return: path to the VAD dump directory
         """
         assert isinstance(verbose, bool)
-        dump_dir = self._dump_dir('vad')
-        out = self.dump.call('vaddump', "-p {} -D {}" \
-                             .format(self.dump.config.PID, dump_dir))
+        dst = self._makedir('vad')
+        out = self.dump.call('vaddump', "-p {} -D {}".format(self.pid, dst))
         if verbose:
-            logger.info("> {}".format(dump_dir))
-        return dump_dir
+            logger.info("> {}".format(dst))
+        return dst
 
-    def _vadsearch(self, stop=True, include_pattern=False, reduce_text=False):
+    def vadsearch(self, stop=True, include_pattern=False, reduce_text=False):
         """
         Executes the 'vaddump' Volatility command then parse the collected VAD
          nodes against used-defined patterns for collecting resources.
@@ -188,9 +386,9 @@ class DumperTemplate(object):
         if not hasattr(self, "fmt_patterns"):
             logger.warning("No VAD search performed (no pattern found)")
             return
-        dump_dir = self._vaddump(verbose=False)
-        for fn in os.listdir(dump_dir):
-            with open(join(dump_dir, fn), 'rb') as f:
+        dst = self.vaddump(verbose=False)
+        for fn in os.listdir(dst):
+            with open(join(dst, fn), 'rb') as f:
                 node = f.read()
             # choose the first start matching pattern in the provided list of
             #  format patterns
@@ -206,12 +404,12 @@ class DumperTemplate(object):
             if found:
                 if reduce_text:
                     out = GenericDumper.reduce_text(out)
-                self._dump_file(out.rstrip('\x00'), 'vadnode', fmt)
+                self.save(out.rstrip('\x00'), self.result('vadnode', fmt))
                 if stop:
                     break
-        shutil.rmtree(dump_dir)
+        shutil.rmtree(dst)
 
-    def _yarascan(self, pattern, verbose=True):
+    def yarascan(self, pattern, verbose=True):
         """
         Executes the 'yarascan' Volatility command for matching a pattern from
          the related process memory.
@@ -221,67 +419,20 @@ class DumperTemplate(object):
         """
         assert isinstance(pattern, str)
         assert isinstance(verbose, bool)
-        cmd, pid = 'yarascan', self.dump.config.PID
-        out = self.dump.call(cmd, "-p {} -Y '/{}/'".format(pid, pattern))
+        cmd = 'yarascan'
+        out = self.dump.call(cmd, "-p {} -Y '/{}/'".format(self.pid, pattern))
         print(out)
         if len(out.strip()) == 0:
             return
         i = 0
-        dst = join(self.dump.out_dir,
-                   self._resname(pid, cmd + "-{:0<2}".format(i), "txt"))
+        dst = self.result(cmd + "-{:0<2}".format(i), "txt")
         while exists(dst):
             i += 1
-            dst = join(self.dump.out_dir,
-                       self._resname(pid, cmd + "-{:0<2}".format(i), "txt"))
+            dst = self.result(cmd + "-{:0<2}".format(i), "txt")
         with open(dst, 'wb') as f:
             f.write(out)
         if verbose:
             logger.info("> {}".format(dst))
-
-    def carve(self, filepath, types=(), clean=False):
-        """
-        Carve files of given types from the input resource with Foremost.
-
-        :param filepath: file path of the resource to be carved
-        :param types: list of extensions to be carved from the resource
-        """
-        assert isfile(filepath)
-        assert (isinstance(types, tuple) or isinstance(types, list)) and \
-               all(isinstance(x, str) for x in types)
-        assert isinstance(clean, bool)
-        logger.debug("> Carving with Foremost...")
-        folder, _ = splitext(filepath)
-        opt = ["", "-t {}".format(",".join(types))][len(types) > 0]
-        cmd = "foremost {} -o {} {}".format(filepath, folder, opt)
-        logger.debug(">> {}".format(cmd))
-        p = Popen(cmd.split(), stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        out, err = p.communicate()
-        with open(join(folder, "audit.txt")) as f:
-            disp = False
-            for line in f.readlines():
-                line = line.strip()
-                if "Finish:" in line:
-                    break
-                if all([x in line for x in ("Num", "Name", "Size", "Comment")]):
-                    disp = True
-                if disp and len(line) > 0 and ":" in line:
-                    fn = line.split(":", 1)[1].strip().split()[0]
-                    _, ext = splitext(fn)
-                    fp = join(folder, ext[1:], fn)
-                    logger.info("> {}".format(fp))
-        if clean:
-            os.remove(filepath)
-
-    def run(self):
-        """
-        Executes the 'memdump' Volatility command for extracting the related
-         process memory.
-        Public run method to be overridden for the operations to be applied to
-         the related application.
-
-        :param verbose: display the log message after saving the memory dump
-        """
-        raise NotImplementedError("Subclass GenericDumper and override run()")
 
     @staticmethod
     def reduce_text(text, alphabet=string.printable, wsize=5, threshold=3):
