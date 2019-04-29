@@ -1,7 +1,7 @@
 #!/usr/bin/python2
 # -*- coding: UTF-8 -*-
 __author__    = "Alexandre D'Hondt"
-__version__   = "2.3.1"
+__version__   = "2.3.2"
 __copyright__ = "A. D'Hondt"
 __license__   = "agpl-3.0"
 __doc__       = """
@@ -28,6 +28,7 @@ def at_exit():
         shutil.rmtree(args.temp_dir)
     except OSError:
         pass
+    memdump.clean()
 
 
 def at_interrupt():
@@ -48,6 +49,7 @@ def list_of(dumpers):
 
 
 if __name__ == '__main__':
+    global memdump
     appl = '\n'.join(two_columns(["  [{}] {}".format(i, a) for i, a in \
                                   enumerate(APPDUMPERS)]))
     sysl = '\n'.join(two_columns(["  [{}] {}".format(i, g) for i, g in \
@@ -94,8 +96,9 @@ if __name__ == '__main__':
         if not os.path.isfile(dump):
             continue
         dump_dir = os.path.join(args.dump_dir, os.path.basename(dump))
-        VolatilityMemDump(dump, args.apps, args.syst, dump_dir, args.plugins,
-                          from_cache).dump(args.update)
+        memdump = VolatilityMemDump(dump, args.apps, args.syst, dump_dir,
+                                    args.plugins, from_cache)
+        memdump.dump(args.update)
         # if archive, assume that every other dump has the same profile as
         #  the first one in order to spare time
         from_cache = True

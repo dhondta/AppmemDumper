@@ -50,7 +50,7 @@ class DumperTemplate(object):
         self.dump = dump
         self.logger = logger
         self.name = self.__class__.__name__
-        self.pids = pids
+        self.pids = list(set(pids))
         self._filter_pids()
         self.__nopid = []
         if not hasattr(self.__class__, "missing_plugins"):
@@ -159,6 +159,8 @@ class DumperTemplate(object):
         assert all(isinstance(x, str) for x in types)
         assert isinstance(clean, bool)
         fp = self.memdump(verbose=False)
+        if clean:
+            self.dump._artifacts.append(fp)
         logger.debug("> Carving with Foremost...")
         folder, _ = splitext(fp)
         opt = ["", "-t {}".format(",".join(types))][len(types) > 0]
@@ -177,9 +179,7 @@ class DumperTemplate(object):
                     fn = line.split(":", 1)[1].strip().split()[0]
                     _, ext = splitext(fn)
                     fp = join(folder, ext[1:], fn)
-                    logger.info("> {}".format(fp))
-        if clean:
-            os.remove(fp)
+                    logger.info("> {}".format(relpath(fp)))
     
     def commands(self, *cmds, **kwargs):
         """
@@ -247,9 +247,11 @@ class DumperTemplate(object):
         out = self.call(cmd, "-p {} --dump-dir {}"
                              .format(self.pid, self.dump.out_dir))
         src = join(self.dump.out_dir, "{}.dmp".format(self.pid))
-        shutil.move(src, dst)
+        # could already exist if previous memdump result was cached
+        if not exists(dst):
+            shutil.move(src, dst)
         if verbose:
-            logger.info("> {}".format(dst))
+            logger.info("> {}".format(relpath(dst)))
         return dst
 
     def memsearch(self, split_on_nullbyte=False):
@@ -277,7 +279,7 @@ class DumperTemplate(object):
                 if split_on_nullbyte:
                     out = out.split('\x00', 1)[0]
                 self.save(out, self.result('memdump-{}'.format(descr), fmt))
-        os.remove(dump)
+        self.dump._artifacts.append(dump)
     
     def parse(self, output):
         """
@@ -365,7 +367,7 @@ class DumperTemplate(object):
         dst = self._makedir('vad')
         out = self.dump.call('vaddump', "-p {} -D {}".format(self.pid, dst))
         if verbose:
-            logger.info("> {}".format(dst))
+            logger.info("> {}".format(relpath(dst)))
         return dst
 
     def vadsearch(self, stop=True, include_pattern=False, reduce_text=False):
@@ -421,7 +423,6 @@ class DumperTemplate(object):
         assert isinstance(verbose, bool)
         cmd = 'yarascan'
         out = self.dump.call(cmd, "-p {} -Y '/{}/'".format(self.pid, pattern))
-        print(out)
         if len(out.strip()) == 0:
             return
         i = 0
@@ -432,7 +433,7 @@ class DumperTemplate(object):
         with open(dst, 'wb') as f:
             f.write(out)
         if verbose:
-            logger.info("> {}".format(dst))
+            logger.info("> {}".format(relpath(dst)))
 
     @staticmethod
     def reduce_text(text, alphabet=string.printable, wsize=5, threshold=3):

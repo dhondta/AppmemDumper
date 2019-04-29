@@ -29,6 +29,7 @@ class AdobeReader(DumperTemplate):
      files on it with Foremost then removes the memory dump.
     """
     procnames = ["reader.exe", "AcroRd32.exe"]
+    only_parent = True
 
     def run(self):
         """

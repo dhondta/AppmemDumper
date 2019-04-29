@@ -9,6 +9,7 @@ from .template import DumperTemplate
 
 
 __all__ = [
+    "Autoruns",
     "Clipboard",
     "CommandLines",
     "CriticalProcessesInfo",
@@ -39,6 +40,9 @@ class Clipboard(DumperTemplate):
     """
     Dumper for collecting the content of the clipboard.
     """
+    messages = ["Something was found in the clipboard ; you should take a look "
+                "at it, there could be some passwords..."]
+    
     def run(self):
         out = self.call("clipboard", failmode="warn").split('\n')
         n = out[0].index("Data")
@@ -46,7 +50,7 @@ class Clipboard(DumperTemplate):
         for i in range(2, len(out)):
             if len(out[i].rstrip()) > n:
                 new.append(out[i])
-        self.save('\n'.join(new), self.result("content"), header=2)
+        self.save('\n'.join(new), self.result("content", "txt"), header=2)
 
 
 class CommandLines(DumperTemplate):

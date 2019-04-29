@@ -145,6 +145,7 @@ class VolatilityMemDump(object):
         assert all(x in SYSDUMPERS for x in syst), "Unknown system dumper(s)"
         assert plugins_dir is None or isdir(plugins_dir), "Bad plugins dir"
         assert isinstance(from_cache, bool)
+        self._artifacts = []
         self._cache = {}
         self._selected_apps = apps
         self._selected_syst = syst
@@ -349,6 +350,17 @@ class VolatilityMemDump(object):
         # cache the result
         self._cache[cmd] = out
         return out
+    
+    def clean(self):
+        """
+        Clean up artifacts registered in self._artifacts.
+        """
+        for a in self._artifacts:
+            try:
+                os.remove(a)
+                logger.debug("Removed '{}'".format(a))
+            except OSError:
+                logger.debug("Could not remove '{}'".format(a))
 
     def dump(self, update=False):
         """
