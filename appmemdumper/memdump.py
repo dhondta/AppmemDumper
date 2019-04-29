@@ -153,6 +153,8 @@ class VolatilityMemDump(object):
             sys.exit(0)
         logger.debug("Setting output directory to '{}'...".format(out_dir))
         self.out_dir = abspath(out_dir)
+        if not exists(self.out_dir):
+            os.makedirs(self.out_dir)
         self._cachefile = join(self.out_dir, ".cache")
         # initialize dump opening
         registry.PluginImporter()
