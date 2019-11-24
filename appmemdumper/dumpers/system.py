@@ -15,6 +15,7 @@ __all__ = [
     "CriticalProcessesInfo",
     "Devices",
     "DumpInfo",
+    "FilesList",
     "Kernel",
     "LsaSecrets",
     "Malfind",
@@ -65,6 +66,8 @@ class CriticalProcessesInfo(DumperTemplate):
     """
     Dumper for checking critical processes.
     """
+    # TODO: check that lsass.exe is only one instance AND its parent is
+    #        wininit.exe (Vista+) or winlogon.exe (XP-)
     def run(self):
         psscan, psxview = self.commands('psscan', 'psxview', save=False,
                                         options="--output=greptext")
@@ -107,6 +110,14 @@ class DumpInfo(DumperTemplate):
         Executes a series of informational Volatility commands.
         """
         self.commands('crashinfo', 'hibinfo', 'vboxinfo', 'vmwareinfo')
+
+
+class FilesList(DumperTemplate):
+    """
+    Dumper for the list of file objects.
+    """
+    def run(self):
+        self.commands('filescan')
 
 
 class Kernel(DumperTemplate):
