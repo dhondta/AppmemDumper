@@ -1,9 +1,5 @@
 #!/usr/bin/python2
 # -*- coding: UTF-8 -*-
-__author__    = "Alexandre D'Hondt"
-__version__   = "2.3.2"
-__copyright__ = "A. D'Hondt"
-__license__   = "agpl-3.0"
 __doc__       = """
 This tool automates the research of some artifacts for forensics purpose in
  memory dumps based upon Volatility for a series of common Windows applications.
@@ -18,6 +14,7 @@ __print__ = "Print documentation:\n- stdout: pydoc {0}\n- html  : pydoc -w {0}"
 
 
 from appmemdumper import *
+from appmemdumper.__info__ import *
 from tinyscript import *
 
 
@@ -28,7 +25,10 @@ def at_exit():
         shutil.rmtree(args.temp_dir)
     except OSError:
         pass
-    memdump.clean()
+    try:                 # this occurs when another exception happened before,
+        memdump.clean()  #  letting 'memdump' set to None
+    except AttributeError:
+        pass
 
 
 def at_interrupt():
@@ -54,7 +54,7 @@ if __name__ == '__main__':
                                   enumerate(APPDUMPERS)]))
     sysl = '\n'.join(two_columns(["  [{}] {}".format(i, g) for i, g in \
                                   enumerate(SYSDUMPERS)]))
-    parser.add_argument("dump", help="memory dump file path")
+    parser.add_argument("dump", type=file_exists, help="memory dump file path")
     parser.add_argument("-a", dest="apps", default="all",
                         type=list_of(APPDUMPERS),
                         help="comma-separated list of integers designating "
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     parser.add_argument("-f", "--force", dest="force", action="store_true",
                         help="force profile search, do not use cached profile")
     parser.add_argument("-p", "--plugins-dir", dest="plugins",
-                        help="path to custom plugins directory")
+                        type=folder_exists, help="path to custom plugins")
     parser.add_argument("-s", dest="syst", default="none",
                         type=list_of(SYSDUMPERS),
                         help="comma-separated list of integers designating "
@@ -75,12 +75,7 @@ if __name__ == '__main__':
                         help="temporary directory for decompressed images")
     parser.add_argument("-u", "--update", action="store_true",
                         help="update previous dump directories")
-    initialize(globals())
-    validate(globals(),
-        ('dump', "not os.path.isfile( ? )", "Dump file does not exist !"),
-        ('plugins', " ? is not None and not os.path.isdir( ? )",
-         "Bad input plugins directory !"),
-    )
+    initialize()
     if len(args.apps) == 0 and len(args.syst) == 0:
         logger.warning("No dumper selected")
         sys.exit(0)
