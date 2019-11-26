@@ -52,8 +52,10 @@ class VolatilityAppDumper(object):
         :param dump: VolatilityMemDump instance
         :param pname: application process name
         """
-        assert isinstance(dump, VolatilityMemDump)
-        assert pname is None or isinstance(pname, str)
+        if not isinstance(dump, VolatilityMemDump):
+            raise ValueError("Not a VolatilityMemDump instance")
+        if pname is not None and not isinstance(pname, str):
+            raise ValueError("Bad process name variable type (should be str)")
         # first, find if PID's exist when a process name is given
         pids = []
         if pname is not None:
@@ -110,7 +112,8 @@ class VolatilityMemDump(object):
 
             :param output: Volatility command output as a string
             """
-            assert isinstance(output, str)
+            if not isinstance(output, str):
+                raise ValueError("Bad output variable type (should be str)")
             self['others'] = []
             for line in output.split('\n'):
                 line = line.strip().split(':', 1)
@@ -125,7 +128,7 @@ class VolatilityMemDump(object):
     }
 
     def __init__(self, dump, apps, syst, out_dir="files", plugins_dir=None,
-                 from_cache=True):
+                 profile=None, from_cache=True):
         """
         Determines the profile, retrieves the list of processes and creates the
          list of application dumpers.
@@ -135,16 +138,22 @@ class VolatilityMemDump(object):
         :param syst: list of the system dumper classes to be handled
         :param out_dir: output directory for retrieved resources
         :param plugins_dir: Volatility custom plugins directory
+        :param profile: forced Volatility profile (preceeds from_cache)
         :param from_cache: boolean indicating if the profile must be retrieved
                            from a cache file in /tmp or found by Volatility
         """
         short = dump
         dump = abspath(dump)
-        assert isfile(dump), "{} is not a dump file".format(dump)
-        assert all(x in APPDUMPERS for x in apps), "Unknown application dumper(s)"
-        assert all(x in SYSDUMPERS for x in syst), "Unknown system dumper(s)"
-        assert plugins_dir is None or isdir(plugins_dir), "Bad plugins dir"
-        assert isinstance(from_cache, bool)
+        if not isfile(dump):
+            raise ValueError("{} is not a dump file".format(dump))
+        if any(x not in APPDUMPERS for x in apps):
+            raise ValueError("Unknown application dumper(s)")
+        if any(x not in SYSDUMPERS for x in syst):
+            raise ValueError("Unknown system dumper(s)")
+        if plugins_dir is not None and not isdir(plugins_dir):
+            raise ValueError("Bad plugins dir")
+        if not isinstance(from_cache, bool):
+            raise ValueError("Bad from-cache variable type (should be bool)")
         self._artifacts = []
         self._cache = {}
         self._selected_apps = apps
@@ -173,34 +182,41 @@ class VolatilityMemDump(object):
         self.config.LOCATION = "file://{}".format(dump)
         # get the right dump profile and test it while getting processes
         logger.info("Opening dump file '{}'...".format(short))
-        self.__is_profile_tested = self.__get_profile(from_cache)
+        self.__is_profile_tested = self.__get_profile(profile, from_cache)
 
-    def __get_profile(self, from_cache=True):
+    def __get_profile(self, profile=None, from_cache=True):
         """
         Get the dump image profile by loading it from a cache file or by running
          'imageinfo' Volatility command.
 
+        :param profile: force profile value (has the precedence on from_cache)
         :param from_cache: load the profile from the cache file if it exists
         :return: boolean indicating if the profile is tested as correct
         """
+        if not isinstance(from_cache, bool):
+            raise ValueError("From-cache variable should be a boolean")
         cf = self._cachefile
-        assert isinstance(from_cache, bool)
         logger.info("Getting profile...")
         # get available profiles and commands
-        available_profiles = registry.get_plugin_classes(obj.Profile)
+        available_profiles = self._get_available_profiles()
+        if profile is not None and profile not in available_profiles.keys():
+            raise ValueError("Bad Volatility profile '{}'".format(profile))
         compatible_profiles = []
-        # load profile from cache or use the 'imageinfo' command to find it
-        if from_cache:
-            if isfile(cf):
+        # load profile from 'profile' variable if not None or from cache, or use
+        #  the 'imageinfo' command to find it
+        self.config.PROFILE = None
+        if profile is not None or from_cache:
+            if profile is not None:
+                self.config.PROFILE = profile
+            elif from_cache and isfile(cf):
                 with open(cf) as f:
                     self.config.PROFILE = f.readlines()[0].strip()
+            if self.config.PROFILE is not None:
                 if not self.__get_pslist():
                     self.config.PROFILE = None
                 else:
                     compatible_profiles = [self.config.PROFILE]
-            else:
-                from_cache = False
-        if not from_cache or self.config.PROFILE is None:
+        if self.config.PROFILE is None:
             self.config.PROFILE = "WinXPSP2x86"  # reset to default
             compatible_profiles = [p for p in self.call('imageinfo',
                                    parser=self.parsers['imageinfo'])]
@@ -211,7 +227,7 @@ class VolatilityMemDump(object):
         cursor, is_profile_tested = 0, False
         while not is_profile_tested and cursor < len(self.__profiles):
             self.config.PROFILE = self.__profiles.keys()[cursor]
-            logger.debug("Profile: {}".format(self.config.PROFILE))
+            logger.debug("Candidate profile: {}".format(self.config.PROFILE))
             is_profile_tested = self.__get_pslist()
             cursor += 1
         if not is_profile_tested:
@@ -237,7 +253,7 @@ class VolatilityMemDump(object):
             self.processes = self.execute('pslist')
             self.processes.extend(self.execute("psscan"))
         except:
-            logger.debug("Wrong profile, re-getting profile...")
+            logger.warning("Wrong profile, re-getting profile...")
             return False
         # collect PIDs relationships
         procs = {'0': "Init"}
@@ -270,6 +286,12 @@ class VolatilityMemDump(object):
         if len(self.dumpers) == 0:
             logger.warning("No application to be handled")
         return True
+    
+    def _get_available_profiles(self):
+        """
+        Get the list of available profiles.
+        """
+        return registry.get_plugin_classes(obj.Profile)
     
     def _update_cache(self, profile=None, dumper=None):
         """
@@ -305,10 +327,14 @@ class VolatilityMemDump(object):
         :param failmode: string indicating the fail mode (error|warn|silent)
         :return: parsed output
         """
-        assert isinstance(command, str)
-        assert options is None or isinstance(options, str)
-        assert parser is None or callable(parser)
-        assert failmode in ["error", "warn", "silent"]
+        if not isinstance(command, str):
+            raise ValueError("Bad command variable type (should be str)")
+        if options is not None and not isinstance(options, str):
+            raise ValueError("Bad options variable type (should be str)")
+        if parser is not None and not callable(parser):
+            raise ValueError("Bad parser variable type (should be callable)")
+        if failmode not in ["error", "warn", "silent"]:
+            raise ValueError("Bad failmode value (should be error|warn|silent)")
         # compose the list of options with already known and input information
         options = [options] if options is not None else []
         if self.__is_profile_tested:
@@ -405,10 +431,14 @@ class VolatilityMemDump(object):
         :param parser: None or function for parsing the output
         :return: parsed output
         """
-        assert command in self.__commands.keys()
-        assert isinstance(nopid, bool)
-        assert isinstance(text, bool)
-        assert parser is None or callable(parser)
+        if command not in self.__commands.keys():
+            raise ValueError("Command does not exist")
+        if not isinstance(nopid, bool):
+            raise ValueError("Bad nopid variable type (should be bool)")
+        if not isinstance(text, bool):
+            raise ValueError("Bad text variable type (should be bool)")
+        if parser is not None and not callable(parser):
+            raise ValueError("Bad parser variable type (should be callable)")
         # try to get the result from cache first
         if command in self._cache:
             logger.debug("> Got result of command '{}' from cache..."
