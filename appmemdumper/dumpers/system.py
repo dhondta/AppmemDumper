@@ -46,12 +46,15 @@ class Clipboard(DumperTemplate):
     
     def run(self):
         out = self.call("clipboard", failmode="warn").split('\n')
+        # we want to know if column "Data" has a value, so take its start index
         n = out[0].index("Data")
         new = out[:2]
         for i in range(2, len(out)):
+            # now, take this line only if column "Data" has a value
             if len(out[i].rstrip()) > n:
                 new.append(out[i])
-        self.save('\n'.join(new), self.result("content", "txt"), header=2)
+        r = self.result("content", "txt")
+        return self.save('\n'.join(new), r, header=2)
 
 
 class CommandLines(DumperTemplate):

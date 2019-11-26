@@ -46,7 +46,8 @@ class DumperTemplate(object):
         :param dump: VolatilityMemDump instance
         :param pids: list of pids corresponding to the application name in dump
         """
-        assert isinstance(pids, list) and all(x.isdigit() for x in pids)
+        if not isinstance(pids, list) or any(not x.isdigit() for x in pids):
+            raise ValueError("Bad list of PID's (should be list of digits)")
         self.dump = dump
         self.logger = logger
         self.name = self.__class__.__name__
@@ -95,7 +96,9 @@ class DumperTemplate(object):
         :param *subdirs: string pieces of the dump directory path
         :return: the dump directory path as a single string
         """
-        assert all(isinstance(x, str) for x in subdirs)
+        if any(not isinstance(x, str) for x in subdirs):
+            raise ValueError("Bad list of subdirectories (should be a list of "
+                             "str)")
         dst = join(self.dump.out_dir, *subdirs)
         if not isdir(dst):
             os.makedirs(dst)
@@ -112,20 +115,21 @@ class DumperTemplate(object):
         :return: list of messages (if any) associated to this dumper
         """
         self._update, n = update, self.name
+        ok = False
         # applies to system dumpers
         if len(self.pids) == 0:
             if not self._is_processed():
                 logger.debug("Dumping information...")
-                self.run()
+                ok = self.run() is not None
                 self.dump._update_cache(dumper=n)
         else:
             for pid in self.pids:
                 if not self._is_processed(pid):
                     logger.debug("Dumping for PID {}...".format(pid))
                     self.dump.config.PID = pid
-                    self.run()
+                    ok = self.run() is not None or ok
                     self.dump._update_cache(dumper="{}-{}".format(n, pid))
-        return self.messages
+        return self.messages if ok else []
     
     @property
     def pid(self):
@@ -156,8 +160,10 @@ class DumperTemplate(object):
         :param clean: remove dump file after processing
         """
         clean = kwargs.pop('clean', False)
-        assert all(isinstance(x, str) for x in types)
-        assert isinstance(clean, bool)
+        if any(not isinstance(x, str) for x in types):
+            raise ValueError("Bad list of types (should be a list of str)")
+        if not isinstance(clean, bool):
+            raise ValueError("Bad clean variable type (should be bool)")
         fp = self.memdump(verbose=False)
         if clean:
             self.dump._artifacts.append(fp)
@@ -239,7 +245,8 @@ class DumperTemplate(object):
         :param verbose: display the log message after saving the memory dump
         :return: path to the process memory dump
         """
-        assert isinstance(verbose, bool)
+        if not isinstance(verbose, bool):
+            raise ValueError("Bad verbose variable type (should be bool)")
         cmd = 'memdump'
         dst = self.result(cmd, "data")
         if self._update and exists(dst):
@@ -325,8 +332,10 @@ class DumperTemplate(object):
         :return: path where the file was saved
         """
         content = content or ""
-        assert isinstance(content, str)
-        assert isinstance(verbose, bool)
+        if not isinstance(content, str):
+            raise ValueError("Bad content variable type (should be str)")
+        if not isinstance(verbose, bool):
+            raise ValueError("Bad verbose variable type (should be bool)")
         content = content.strip()
         if content == "" or len(content.split('\n')) == header:
             logger.debug("Empty content, no resource saved")
@@ -363,7 +372,8 @@ class DumperTemplate(object):
         :param verbose: display the log message after grabbing the VAD nodes
         :return: path to the VAD dump directory
         """
-        assert isinstance(verbose, bool)
+        if not isinstance(verbose, bool):
+            raise ValueError("Bad verbose variable type (should be bool)")
         dst = self._makedir('vad')
         out = self.dump.call('vaddump', "-p {} -D {}".format(self.pid, dst))
         if verbose:
@@ -382,9 +392,13 @@ class DumperTemplate(object):
         :param reduce_text: use GenericDumper to reduce the output (makes sense
                             if the output is text)
         """
-        assert isinstance(stop, bool)
-        assert isinstance(include_pattern, bool)
-        assert isinstance(reduce_text, bool)
+        if not isinstance(stop, bool):
+            raise ValueError("Bad stop variable type (should be bool)")
+        if not isinstance(include_pattern, bool):
+            raise ValueError("Bad include_pattern variable type (should be "
+                             "bool)")
+        if not isinstance(reduce_text, bool):
+            raise ValueError("Bad reduce_text variable type (should be bool)")
         if not hasattr(self, "fmt_patterns"):
             logger.warning("No VAD search performed (no pattern found)")
             return
@@ -419,8 +433,10 @@ class DumperTemplate(object):
         :param pattern: yara pattern
         :param verbose: display the log message after saving the scan result
         """
-        assert isinstance(pattern, str)
-        assert isinstance(verbose, bool)
+        if not isinstance(pattern, str):
+            raise ValueError("Bad pattern variable type (should be str)")
+        if not isinstance(verbose, bool):
+            raise ValueError("Bad verbose variable type (should be bool)")
         cmd = 'yarascan'
         out = self.dump.call(cmd, "-p {} -Y '/{}/'".format(self.pid, pattern))
         if len(out.strip()) == 0:
@@ -443,10 +459,14 @@ class DumperTemplate(object):
          the first character in the window must be a not-allowed one and the
          number of not-allowed ones in the window is above the threshold
         """
-        assert isinstance(text, str)
-        assert isinstance(alphabet, str)
-        assert isinstance(wsize, int)
-        assert isinstance(threshold, int)
+        if not isinstance(text, str):
+            raise ValueError("Bad text variable type (should be str)")
+        if not isinstance(alphabet, str):
+            raise ValueError("Bad alphabet variable type (should be str)")
+        if not isinstance(wsize, int):
+            raise ValueError("Bad wsize variable type (should be int)")
+        if not isinstance(threshold, int):
+            raise ValueError("Bad threshold variable type (should be int)")
         # NB: the text is in UTF-16 little-endian and can simply be retrieved
         #     by removing the nullbytes after each normal character
         text = text.replace('\x00', '').replace('\r\n', '\n')
