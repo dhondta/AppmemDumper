@@ -64,7 +64,7 @@ usage: app-mem-dumper [-a APPS] [-s SYST] [-f] [-p PLUGINS]
                       [-h] [-v]
                       dump
 
-AppMemDumper v2.4.0
+AppMemDumper v2.4.1
 Author   : Alexandre D'Hondt
 Copyright: © 2019 A. D'Hondt
 License  : GNU Affero General Public License v3.0
@@ -104,7 +104,7 @@ application/system dumpers:
                           [8] LsaSecrets            
                          (default: none)
 
-Volatility options:
+volatility options:
   -f, --force           force profile search, do not use cached profile (default: False)
   -p PLUGINS, --plugins-dir PLUGINS
                         path to custom plugins (default: None)
