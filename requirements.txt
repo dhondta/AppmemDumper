@@ -1,3 +1,3 @@
 patool
 pyunpack
-tinyscript
+tinyscript>=1.22.4
