@@ -41,8 +41,7 @@ class Clipboard(DumperTemplate):
     """
     Dumper for collecting the content of the clipboard.
     """
-    messages = ["Something was found in the clipboard ; you should take a look "
-                "at it, there could be some passwords..."]
+    messages = ["Something was found in the clipboard ; you should take a look at it, there could be some passwords..."]
     
     def run(self):
         out = self.call("clipboard", failmode="warn").split('\n')
@@ -69,11 +68,9 @@ class CriticalProcessesInfo(DumperTemplate):
     """
     Dumper for checking critical processes.
     """
-    # TODO: check that lsass.exe is only one instance AND its parent is
-    #        wininit.exe (Vista+) or winlogon.exe (XP-)
+    # TODO: check that lsass.exe is only one instance AND its parent is wininit.exe (Vista+) or winlogon.exe (XP-)
     def run(self):
-        psscan, psxview = self.commands('psscan', 'psxview', save=False,
-                                        options="--output=greptext")
+        psscan, psxview = self.commands('psscan', 'psxview', save=False, options="--output=greptext")
         info = ""
         # check for single instance of lsass.exe and services.exe
         for ps in ["lsass.exe", "services.exe"]:
@@ -137,8 +134,7 @@ class LsaSecrets(DumperTemplate):
     """
     def run(self):
         """
-        Executes 'hivelist' and 'lsadump' Volatility commands in order to dump
-         LSA secrets.
+        Executes 'hivelist' and 'lsadump' Volatility commands in order to dump LSA secrets.
         """
         sec, sys = None, None
         for line in self.call("hivelist").split('\n'):
@@ -154,8 +150,7 @@ class LsaSecrets(DumperTemplate):
 
 class Malfind(DumperTemplate):
     """
-    Dumper for finding hidden or injected code/DLLs in user mode memory,
-     unlinked DLLs and detecting hollowing techniques.
+    Dumper for finding hidden or injected code in user mode memory, unlinked DLLs and detecting hollowing techniques.
     """
     def run(self):
         if self.commands('malfinddeep', failmode="warn")[0] is None:
@@ -218,9 +213,7 @@ class Timeline(DumperTemplate):
     Dumper for creating a timeline from various artifacts in memory.
     """
     def run(self):
-        out = '\n'.join(self.commands('timeliner',
-                                      ('mftparser', "-C --output=body"),
-                                      'shellbags', save=False,
+        out = '\n'.join(self.commands('timeliner', ('mftparser', "-C --output=body"), 'shellbags', save=False,
                                       options="--output=body", failmode="warn"))
         tmp = self.save(out, self.result("temp"), verbose=False)
         out, _ = self.shell("mactime -d -b {}".format(tmp), True)
@@ -241,8 +234,7 @@ class UserHashes(DumperTemplate):
     """
     def run(self):
         """
-        Executes 'hivelist' and 'hashdump' Volatility commands in order to dump
-         user hashes.
+        Executes 'hivelist' and 'hashdump' Volatility commands in order to dump user hashes.
         """
         sam, sys = None, None
         for line in self.call("hivelist").split('\n'):
@@ -254,3 +246,4 @@ class UserHashes(DumperTemplate):
                     sys = start
         if sam is not None and sys is not None:
             self.commands("hashdump", options="{} -s {}".format(sam, sys))
+

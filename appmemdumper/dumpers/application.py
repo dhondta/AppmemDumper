@@ -24,17 +24,16 @@ __all__ = [
 
 class AdobeReader(DumperTemplate):
     """
-    Dumper for the well-known application Adobe Reader. It uses the 'run()'
-     method of DumperTemplate to extract the memory of the process and carves PDF
-     files on it with Foremost then removes the memory dump.
+    Dumper for the well-known application Adobe Reader. It uses the 'run()' method of DumperTemplate to extract the
+     memory of the process and carves PDF files on it with Foremost then removes the memory dump.
     """
     procnames = ["reader.exe", "AcroRd32.exe"]
     only_parent = True
 
     def run(self):
         """
-        Executes the 'memdump' Volatility command (DumperTemplate), carves PDF
-         files with Foremost then removes the process memory dump.
+        Executes the 'memdump' Volatility command (DumperTemplate), carves PDF files with Foremost then removes the
+         process memory dump.
         """
         self.carve("pdf", clean=True)
 
@@ -49,9 +48,8 @@ class Chrome(DumperTemplate):
         """
         Executes the Chrome-related Volatility community plugins.
         """
-        self.commands('chromehistory', 'chromevisits', 'chromedownloadchains',
-                      'chromesearchterms', 'chromedownloads', 'chromecookies',
-                      options="--output=csv", failmode="warn")
+        self.commands('chromehistory', 'chromevisits', 'chromedownloadchains', 'chromesearchterms', 'chromedownloads',
+                      'chromecookies', options="--output=csv", failmode="warn")
 
 
 class Firefox(DumperTemplate):
@@ -71,8 +69,7 @@ class Firefox(DumperTemplate):
 
 class FoxitReader(AdobeReader):
     """
-    Dumper for the common application Foxit Reader. It performs the same
-     operations as AdobeReaderDumper.
+    Dumper for the common application Foxit Reader. It performs the same operations as AdobeReaderDumper.
     """
     procnames = ["FoxitReader.ex", "FoxitReader.exe"]
 
@@ -82,8 +79,7 @@ class InternetExplorer(DumperTemplate):
     Dumper for the common application Microsoft Internet Explorer.
     """
     procnames = ["iexplore.exe"]
-    re_patterns = [(r'function FindProxyForURL.{232}', 'txt', 'proxy-rules'),
-                   (r'Client UrlCache}', 'txt', 'urlcache')]
+    re_patterns = [(r'function FindProxyForURL.{232}', 'txt', 'proxy-rules'), (r'Client UrlCache}', 'txt', 'urlcache')]
 
     def run(self):
         """
@@ -105,17 +101,14 @@ class KeePass(DumperTemplate):
     fmt_patterns = [("\x03\xd9\xa2\x9a\x65\xfb\x4b\xb5", "\x00" * 16, "kdb"),
                     ("\x03\xd9\xa2\x9a\x66\xfb\x4b\xb5", "\x00" * 16, "kdbx"),
                     ("\x03\xd9\xa2\x9a\x67\xfb\x4b\xb5", "\x00" * 16, "kdbx")]
-    re_patterns = [(r'(<\?xml(\s[a-z0-9\=\-\"\'\._]+)+\?>\r?\n<KeePassFile>'
-                     '(.*?)<\/KeePassFile>)', "xml", "file"),
-                   (r'(<\?xml(\s[a-zA-Z0-9\=\-\"\'\.\:\/_]+)+\?>\r?\n'
-                     '<ArrayOfString(\s[a-zA-Z0-9\=\-\"\'\.\:\/_]+)+>'
-                     '(.*?)<\/ArrayOfString>)', "xml", "path")]
+    re_patterns = [(r'(<\?xml(\s[a-z0-9\=\-\"\'\._]+)+\?>\r?\n<KeePassFile>(.*?)<\/KeePassFile>)', "xml", "file"),
+                   (r'(<\?xml(\s[a-zA-Z0-9\=\-\"\'\.\:\/_]+)+\?>\r?\n<ArrayOfString(\s[a-zA-Z0-9\=\-\"\'\.\:\/_]+)+>'
+                    r'(.*?)<\/ArrayOfString>)', "xml", "path")]
 
     def run(self):
         """
-        Executes the 'memdump' Volatility command (DumperTemplate), retrieves
-         some XML content, then executes the 'vaddump' Volatility command and
-         finally gets the KeePass DB from the VAD nodes.
+        Executes the 'memdump' Volatility command (DumperTemplate), retrieves some XML content, then executes the
+         'vaddump' Volatility command and finally gets the KeePass DB from the VAD nodes.
         """
         self.memsearch()
         self.vadsearch(include_pattern=True)
@@ -123,8 +116,7 @@ class KeePass(DumperTemplate):
 
 class MediaPlayerClassic(DumperTemplate):
     """
-    Dumper for the common application Media Player Classic. It performs the same
-     operations as MSPaintDumper.
+    Dumper for the common application Media Player Classic. It performs the same operations as MSPaintDumper.
     """
     procnames = ["mpc-hc.exe"]
     messages = DumperTemplate._predef_messages[0:1]
@@ -135,9 +127,8 @@ class MediaPlayerClassic(DumperTemplate):
 
 class MSPaint(DumperTemplate):
     """
-    Dumper for the well-known application Paint built in Microsoft Windows. It
-     uses the 'run()' method of DumperTemplate to extract the memory of the
-     process for further analysis using the 'memdump' Volatility command.
+    Dumper for the well-known application Paint built in Microsoft Windows. It uses the 'run()' method of DumperTemplate
+     to extract the memory of the process for further analysis using the 'memdump' Volatility command.
     """
     procnames = ["mspaint.exe"]
     messages = DumperTemplate._predef_messages[0:1]
@@ -148,14 +139,12 @@ class MSPaint(DumperTemplate):
 
 class Notepad(DumperTemplate):
     """
-    Dumper for the well-known application Notepad built in Microsoft Windows. It
-     tries the 'notepad' plugin, then tries the 'editbox' plugin or finally gets
-     the text contained in the edition control box of the main window of Notepad
+    Dumper for the well-known application Notepad built in Microsoft Windows. It tries the 'notepad' plugin, then tries
+     the 'editbox' plugin or finally gets the text contained in the edition control box of the main window of Notepad
      from a VAD node based on a pattern.
     """
     procnames = ["notepad.exe"]
-    fmt_patterns = [("\xf2\xf3\xf3\xff\xf1\xf2\xf2\xff\xf0\xf1\xf0\xff\xf0"
-                     "\xf1\xf1\xff", "\x00" * 16, "txt")]
+    fmt_patterns = [("\xf2\xf3\xf3\xff\xf1\xf2\xf2\xff\xf0\xf1\xf0\xff\xf0\xf1\xf1\xff", "\x00" * 16, "txt")]
 
     def run(self):
         """
@@ -191,54 +180,45 @@ class OpenOffice(DumperTemplate):
     """
     Dumper for the common OpenOffice suite.
     """
-    procnames = ["soffice.exe", "soffice.bin", "swriter.exe", "scalc.exe",
-                 "simpress.exe", "sdraw.exe", "sbase.exe", "smath.exe",
-                 "sweb.exe"]
+    procnames = ["soffice.exe", "soffice.bin", "swriter.exe", "scalc.exe", "simpress.exe", "sdraw.exe", "sbase.exe",
+                 "smath.exe", "sweb.exe"]
     # https://ubuntuforums.org/showthread.php?t=1378119
-    re_patterns = [(r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.textP'
-                    r'K(.*?)META-INF/manifest.xmlPK.{20}', "odt", "text"),
-                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.sprea'
-                    r'dsheetPK(.*?)META-INF/manifest.xmlPK.{20}', "ods",
-                    "spreadsheet"),
-                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.prese'
-                    r'ntationPK(.*?)META-INF/manifest.xmlPK.{20}', "odp",
-                    "presentation"),
-                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.graph'
-                    r'icsPK(.*?)META-INF/manifest.xmlPK.{20}', "odg",
-                    "graphics"),
-                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.chart'
-                    r'PK(.*?)META-INF/manifest.xmlPK.{20}', "odc", "chart"),
-                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.formu'
-                    r'laPK(.*?)META-INF/manifest.xmlPK.{20}', "odf",
-                    "formula"),
-                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.image'
-                    r'PK(.*?)META-INF/manifest.xmlPK.{20}', "odi", "image"),
-                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.text-'
-                    r'masterPK(.*?)META-INF/manifest.xmlPK.{20}', "odm",
-                    "textmaster"),
-                   (r'(PK).{28}mimetypeapplication/vnd.sun.xml.writerPK(.*?)'
-                    r'META-INF/manifest.xmlPK.{20}', "sxw", "writer")]
+    re_patterns = [(r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.textPK(.*?)META-INF/manifest.xmlPK.{20}',
+                    "odt", "text"),
+                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.spreadsheetPK(.*?)META-INF/manifest.xmlPK'
+                    r'.{20}', "ods", "spreadsheet"),
+                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.presentationPK(.*?)META-INF/manifest.xmlPK'
+                    r'.{20}', "odp", "presentation"),
+                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.graphicsPK(.*?)META-INF/manifest.xmlPK.{20}',
+                    "odg", "graphics"),
+                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.chartPK(.*?)META-INF/manifest.xmlPK.{20}',
+                    "odc", "chart"),
+                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.formulaPK(.*?)META-INF/manifest.xmlPK.{20}',
+                    "odf", "formula"),
+                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.imagePK(.*?)META-INF/manifest.xmlPK.{20}',
+                    "odi", "image"),
+                   (r'(PK).{28}mimetypeapplication/vnd.oasis.opendocument.text-masterPK(.*?)META-INF/manifest.xmlPK'
+                    r'.{20}', "odm", "textmaster"),
+                   (r'(PK).{28}mimetypeapplication/vnd.sun.xml.writerPK(.*?)META-INF/manifest.xmlPK.{20}',
+                    "sxw", "writer")]
 
     def run(self):
         """
-        Executes the 'memdump' Volatility command (DumperTemplate) and retrieves
-         OpenOffice documents.
+        Executes the 'memdump' Volatility command (DumperTemplate) and retrieves OpenOffice documents.
         """
         self.memsearch()
 
 
 class PDFLite(AdobeReader):
     """
-    Dumper for the common application PDFLite. It performs the same operations
-     as AdobeReaderDumper.
+    Dumper for the common application PDFLite. It performs the same operations as AdobeReaderDumper.
     """
     procnames = ["PDFlite.exe"]
 
 
 class SumatraPDF(AdobeReader):
     """
-    Dumper for the common application Sumatra PDF. It performs the same
-     operations as AdobeReaderDumper.
+    Dumper for the common application Sumatra PDF. It performs the same operations as AdobeReaderDumper.
     """
     procnames = ["SumatraPDF.exe"]
 
@@ -248,8 +228,7 @@ class Thunderbird(DumperTemplate):
     Dumper for the common application Thunderbird.
     """
     procnames = ["thunderbird.ex", "thunderbird.exe"]
-    messages = ["You can grep the .dmp file on common email-related keywords "
-                "(e.g. From, To, ...)"]
+    messages = ["You can grep the .dmp file on common email-related keywords (e.g. From, To, ...)"]
 
     def run(self):
         """
@@ -266,30 +245,27 @@ class TrueCrypt(DumperTemplate):
 
     def run(self):
         """
-        Executes the 'memdump' Volatility command (DumperTemplate) and the
-         TrueCrypt-related Volatility commands.
+        Executes the 'memdump' Volatility command (DumperTemplate) and the TrueCrypt-related Volatility commands.
         """
         self.memdump()
-        self.commands('truecryptmaster', 'truecryptpassphrase',
-                      'truecryptsummary')
+        self.commands('truecryptmaster', 'truecryptpassphrase', 'truecryptsummary')
 
 
 class Wordpad(DumperTemplate):
     """
-    Dumper for the well-known application Wordpad built in Microsoft Windows. It
-     extracts process' memory using the 'memdump' command. It uses the 'carve()'
-     method of DumperTemplate to extract image resources and executes the
-     'vaddump' command for retrieving Virtual Address Descriptor (VAD) objects
-     for later manual analysis.
+    Dumper for the well-known application Wordpad built in Microsoft Windows. It extracts process' memory using the
+     'memdump' command. It uses the 'carve()' method of DumperTemplate to extract image resources and executes the
+     'vaddump' command for retrieving Virtual Address Descriptor (VAD) objects for later manual analysis.
     """
     procnames = ["wordpad.exe"]
     messages = DumperTemplate._predef_messages[0:2]
 
     def run(self):
         """
-        Executes the 'memdump' Volatility command (DumperTemplate), carves files
-         with Foremost then executes the 'editbox' Volatility command.
+        Executes the 'memdump' Volatility command (DumperTemplate), carves files with Foremost then executes the
+         'editbox' Volatility command.
         """
         self.carve("jpg", "png", clean=True)
         # TODO: find patterns for searching into the VAD nodes
         self.vaddump()
+

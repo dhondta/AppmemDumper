@@ -10,19 +10,17 @@ from subprocess import check_output
 __all__ = ["decompress", "two_columns"]
 logger = logging.getLogger("main")
 
-ARCHIVE_EXCL = lambda f: basename(f) in ["README", "README.md"] or \
-                         f.endswith(".txt")
+ARCHIVE_EXCL = lambda f: basename(f) in ["README", "README.md"] or f.endswith(".txt")
 
 
 def decompress(filename, temp_dir):
     """
-    Attempts to decompress the input file to a temporary folder. If Patool fails
-     to unpack it, it is assumed that the file is not an archive.
+    Attempts to decompress the input file to a temporary folder. If Patool fails to unpack it, it is assumed that the
+     file is not an archive.
 
     :param filename: path to the input file
     :param temp_dir: temporary directory for decompressed files
-    :return:         list of files (these extracted if decompression was
-                      performed or the input filename otherwise)
+    :return:         list of files (these extracted if decompression was performed or the input filename otherwise)
     """
     # set the temporary folder name
     base, ext = splitext(basename(filename))
@@ -65,8 +63,7 @@ def decompress(filename, temp_dir):
         else:
             logger.exception(e)
     # retrieve the list of extracted files
-    return True, [join(tmp_dir, fn) for fn in listdir(tmp_dir) \
-                  if not ARCHIVE_EXCL(fn)]
+    return True, [join(tmp_dir, fn) for fn in listdir(tmp_dir) if not ARCHIVE_EXCL(fn)]
 
 
 def two_columns(lines):
@@ -78,5 +75,6 @@ def two_columns(lines):
     """
     n = len(lines) / 2 + len(lines) % 2
     w = max(map(len, lines))
-    return [("{: <%d}{}" % ((w / 4 + 1) * 4)).format(l1, l2) for l1, l2 in \
-            zip(lines[:n], lines[n:] + [""] * (len(lines) % 2))]
+    return [("{: <%d}{}" % ((w / 4 + 1) * 4)).format(l1, l2) for l1, l2 in zip(lines[:n],
+                                                                               lines[n:] + [""] * (len(lines) % 2))]
+

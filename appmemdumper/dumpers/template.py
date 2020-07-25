@@ -16,9 +16,8 @@ logger = logging.getLogger("main")
 
 class DumperTemplate(object):
     """
-    Dumper template class for handling base operations on the memory dump for
-     handled applications. It can execute Volatility commands using the attached
-     VolatilityMemDump instance and carve files using Foremost.
+    Dumper template class for handling base operations on the memory dump for handled applications. It can execute
+     Volatility commands using the attached VolatilityMemDump instance and carve files using Foremost.
     """
     _predef_messages = [
         "Raw data (.data files) requires manual handling ;\n"
@@ -33,10 +32,9 @@ class DumperTemplate(object):
         " the .dmp objects.",
     ]
     messages = []
-    procnames = None  # by default, the GenericDumper does not correspond to
-                      # any particular process name, meaning that a dumper
-                      # inheriting this class without redefining procnames will
-                      # be processed regardless of the process list
+    procnames = None  # by default, the GenericDumper does not correspond to any particular process name, meaning that a
+                      #  dumper inheriting this class without redefining procnames will be processed regardless of the
+                      #  process list
     only_parent = False
 
     def __init__(self, dump, pids):
@@ -59,8 +57,7 @@ class DumperTemplate(object):
     
     def _filter_pids(self):
         """
-        Filter out child PID's of processes whose own and parent procnames are
-         in self.procnames.
+        Filter out child PID's of processes whose own and parent procnames are in self.procnames.
         """
         if self.only_parent:
             for k, v in self.ppids.items():
@@ -74,11 +71,10 @@ class DumperTemplate(object):
 
     def _is_processed(self, pid=None):
         """
-        Check if this dumper was already processed for the given PID relying on
-         a cache file.
+        Check if this dumper was already processed for the given PID relying on a cache file.
          
         :param pid: PID (if any)
-        :return: True if dumper already processed
+        :return:    True if dumper already processed
         """
         if self._update:
             with open(self.dump._cachefile) as f:
@@ -94,11 +90,10 @@ class DumperTemplate(object):
         Compose the dump directory path and create it if it does not exist.
 
         :param *subdirs: string pieces of the dump directory path
-        :return: the dump directory path as a single string
+        :return:         the dump directory path as a single string
         """
         if any(not isinstance(x, str) for x in subdirs):
-            raise ValueError("Bad list of subdirectories (should be a list of "
-                             "str)")
+            raise ValueError("Bad list of subdirectories (should be a list of str)")
         dst = join(self.dump.out_dir, *subdirs)
         if not isdir(dst):
             os.makedirs(dst)
@@ -106,13 +101,11 @@ class DumperTemplate(object):
 
     def _run(self, update=False):
         """
-        Consecutively execute the public 'run()' method on each PID from the
-         pids list.
+        Consecutively execute the public 'run()' method on each PID from the pids list.
         
-        :param update: update output directory (meaning that collected pieces of
-                        information should not be recollected using Volatility
-                        commands)
-        :return: list of messages (if any) associated to this dumper
+        :param update: update output directory (meaning that collected pieces of information should not be recollected
+                        using Volatility commands)
+        :return:       list of messages (if any) associated to this dumper
         """
         self._update, n = update, self.name
         ok = False
@@ -169,8 +162,7 @@ class DumperTemplate(object):
             self.dump._artifacts.append(fp)
         logger.debug("> Carving with Foremost...")
         folder, _ = splitext(fp)
-        opt = ["", "-t {}".format(",".join(types))][len(types) > 0]
-        cmd = "foremost {} -o {} {}".format(fp, folder, opt)
+        cmd = "foremost {} -o {} {}".format(fp, folder, ["", "-t {}".format(",".join(types))][len(types) > 0])
         logger.debug(">> {}".format(cmd))
         self.shell(cmd)
         with open(join(folder, "audit.txt")) as f:
@@ -183,14 +175,12 @@ class DumperTemplate(object):
                     disp = True
                 if disp and len(line) > 0 and ":" in line:
                     fn = line.split(":", 1)[1].strip().split()[0]
-                    _, ext = splitext(fn)
-                    fp = join(folder, ext[1:], fn)
+                    fp = join(folder, splitext(fn)[1][1:], fn)
                     logger.info("> {}".format(relpath(fp)))
     
     def commands(self, *cmds, **kwargs):
         """
-        Call multiple Volatility commands on the associated dump with the given
-         options and save the results.
+        Call multiple Volatility commands on the associated dump with the given options and save the results.
         """
         fmt = kwargs.pop('fmt', None)
         options = kwargs.pop('options', None)
@@ -214,9 +204,9 @@ class DumperTemplate(object):
                 continue
             if save:
                 # adapt output format if necessary
-                _ = "--output="
-                if fmt is None and opt is not None and _ in opt:
-                    fmt = filter(lambda x: _ in x, opt.split())[0].split('=')[1]
+                s = "--output="
+                if fmt is None and opt is not None and s in opt:
+                    fmt = filter(lambda x: s in x, opt.split())[0].split('=')[1]
                 else:
                     fmt = "txt"
                 dst = self.result(cmd, fmt)
@@ -239,11 +229,10 @@ class DumperTemplate(object):
 
     def memdump(self, verbose=True):
         """
-        Executes the 'memdump' Volatility command for extracting the related
-         process memory.
+        Executes the 'memdump' Volatility command for extracting the related process memory.
 
         :param verbose: display the log message after saving the memory dump
-        :return: path to the process memory dump
+        :return:        path to the process memory dump
         """
         if not isinstance(verbose, bool):
             raise ValueError("Bad verbose variable type (should be bool)")
@@ -251,8 +240,7 @@ class DumperTemplate(object):
         dst = self.result(cmd, "data")
         if self._update and exists(dst):
             return dst
-        out = self.call(cmd, "-p {} --dump-dir {}"
-                             .format(self.pid, self.dump.out_dir))
+        out = self.call(cmd, "-p {} --dump-dir {}".format(self.pid, self.dump.out_dir))
         src = join(self.dump.out_dir, "{}.dmp".format(self.pid))
         # could already exist if previous memdump result was cached
         if not exists(dst):
@@ -263,13 +251,11 @@ class DumperTemplate(object):
 
     def memsearch(self, split_on_nullbyte=False):
         """
-        Executes the 'memdump' Volatility command then parse the collected dump
-         against user-defined regular expressions.
+        Executes the 'memdump' Volatility command and parses the collected dump against user-defined regex.
         Valid patterns structure:
           self.re_patterns := list(tuples(re_pattern, format, short_descr))
         
-        :param split_on_nullbyte: split the matched string on nullbyte and take
-                                   only the first part
+        :param split_on_nullbyte: split the matched string on nullbyte and take only the first part
         """
         if not hasattr(self, "re_patterns"):
             logger.warning("No memory search performed (no pattern found)")
@@ -298,12 +284,11 @@ class DumperTemplate(object):
     
     def result(self, cmd, fmt=None):
         """
-        Compose the resource path depending on the executed command and given
-         format.
+        Compose the resource path depending on the executed command and given format.
         
         :param cmd: Volatility command name
         :param fmt: output format extension
-        :return: relative resource path
+        :return:    relative resource path
         """
         _ = self.name.lower() + "{}-{}{}"
         _ = _.format(["-{}".format(self.pid), ""][self.pid is None], cmd,
@@ -312,10 +297,8 @@ class DumperTemplate(object):
 
     def run(self):
         """
-        Executes the 'memdump' Volatility command for extracting the related
-         process memory.
-        Public run method to be overridden for the operations to be applied to
-         the related application.
+        Executes the 'memdump' Volatility command for extracting the related process memory.
+        Public run method to be overridden for the operations to be applied to the related application.
 
         :param verbose: display the log message after saving the memory dump
         """
@@ -326,10 +309,10 @@ class DumperTemplate(object):
         Save a resource to a destination according to naming conventions.
 
         :param content: content to be saved
-        :param dst: relative resource path
+        :param dst:     relative resource path
         :param verbose: verbose mode
-        :param header: number of heading rows to be considered
-        :return: path where the file was saved
+        :param header:  number of heading rows to be considered
+        :return:        path where the file was saved
         """
         content = content or ""
         if not isinstance(content, str):
@@ -351,7 +334,7 @@ class DumperTemplate(object):
         Executes an OS command.
         
         :param cmd: command line as text
-        :return: stdout, stderr
+        :return:    stdout, stderr
         """
         cmd = cmd.split()
         try:
@@ -366,11 +349,10 @@ class DumperTemplate(object):
 
     def vaddump(self, verbose=True):
         """
-        Executes the 'vaddump' Volatility command for extracting the VAD tree
-         for a given process.
+        Executes the 'vaddump' Volatility command for extracting the VAD tree for a given process.
 
         :param verbose: display the log message after grabbing the VAD nodes
-        :return: path to the VAD dump directory
+        :return:        path to the VAD dump directory
         """
         if not isinstance(verbose, bool):
             raise ValueError("Bad verbose variable type (should be bool)")
@@ -382,21 +364,19 @@ class DumperTemplate(object):
 
     def vadsearch(self, stop=True, include_pattern=False, reduce_text=False):
         """
-        Executes the 'vaddump' Volatility command then parse the collected VAD
-         nodes against used-defined patterns for collecting resources.
+        Executes the 'vaddump' Volatility command then parse the collected VAD nodes against used-defined patterns for
+         collecting resources.
         Valid patterns structure:
           self.fmt_patterns := list(tuples(start_pattern, end_pattern, format))
         
-        :param stop: stop after the first resource matching the patterns
+        :param stop:            stop after the first resource matching the patterns
         :param include_pattern: include the found pattern when saving resource
-        :param reduce_text: use GenericDumper to reduce the output (makes sense
-                            if the output is text)
+        :param reduce_text:     use GenericDumper to reduce the output (makes sense if the output is text)
         """
         if not isinstance(stop, bool):
             raise ValueError("Bad stop variable type (should be bool)")
         if not isinstance(include_pattern, bool):
-            raise ValueError("Bad include_pattern variable type (should be "
-                             "bool)")
+            raise ValueError("Bad include_pattern variable type (should be bool)")
         if not isinstance(reduce_text, bool):
             raise ValueError("Bad reduce_text variable type (should be bool)")
         if not hasattr(self, "fmt_patterns"):
@@ -406,8 +386,7 @@ class DumperTemplate(object):
         for fn in os.listdir(dst):
             with open(join(dst, fn), 'rb') as f:
                 node = f.read()
-            # choose the first start matching pattern in the provided list of
-            #  format patterns
+            # choose the first start matching pattern in the provided list of format patterns
             found = False
             for start, end, fmt in self.fmt_patterns:
                 try:
@@ -427,8 +406,7 @@ class DumperTemplate(object):
 
     def yarascan(self, pattern, verbose=True):
         """
-        Executes the 'yarascan' Volatility command for matching a pattern from
-         the related process memory.
+        Executes the 'yarascan' Volatility command for matching a pattern from the related process memory.
         
         :param pattern: yara pattern
         :param verbose: display the log message after saving the scan result
@@ -454,10 +432,9 @@ class DumperTemplate(object):
     @staticmethod
     def reduce_text(text, alphabet=string.printable, wsize=5, threshold=3):
         """
-        Determines start|end bounds based on a window of booleans telling if the
-         characters are well in the allowed alphabet with the constraints that
-         the first character in the window must be a not-allowed one and the
-         number of not-allowed ones in the window is above the threshold
+        Determines start|end bounds based on a window of booleans telling if the characters are well in the allowed
+         alphabet with the constraints that the first character in the window must be a not-allowed one and the number
+         of not-allowed ones in the window is above the threshold.
         """
         if not isinstance(text, str):
             raise ValueError("Bad text variable type (should be str)")
@@ -467,8 +444,8 @@ class DumperTemplate(object):
             raise ValueError("Bad wsize variable type (should be int)")
         if not isinstance(threshold, int):
             raise ValueError("Bad threshold variable type (should be int)")
-        # NB: the text is in UTF-16 little-endian and can simply be retrieved
-        #     by removing the nullbytes after each normal character
+        # NB: the text is in UTF-16 little-endian and can simply be retrieved by removing the nullbytes after each
+        #      normal character
         text = text.replace('\x00', '').replace('\r\n', '\n')
         halflen = len(text) / 2
         bounds = [halflen, len(text) - halflen - 1]
@@ -490,3 +467,4 @@ class DumperTemplate(object):
                         bounds[i] = k - len(w)
                         break
         return text[halflen-bounds[0]:halflen+bounds[1]]
+
