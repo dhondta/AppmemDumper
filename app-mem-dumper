@@ -1,12 +1,11 @@
 #!/usr/bin/python2
 # -*- coding: UTF-8 -*-
 __doc__       = """
-This tool automates the research of some artifacts for forensics purpose in
- memory dumps based upon Volatility for a series of common Windows applications.
+This tool automates the research of some artifacts for forensics purpose in memory dumps based upon Volatility for a
+ series of common Windows applications.
 
-It can also open multiple archive formats (it uses pyunpack). In case of an
- archive, the tool will extract all its files to a temporary directory and then
- try to open each file as a memory dump.
+It can also open multiple archive formats (it uses pyunpack). In case of an archive, the tool will extract all its files
+ to a temporary directory and then try to open each file as a memory dump.
 """
 __examples__  = [
     "memory.dmp",
@@ -31,8 +30,8 @@ def at_exit():
         shutil.rmtree(args.temp_dir)
     except OSError:
         pass
-    try:                 # this occurs when another exception happened before,
-        memdump.clean()  #  letting 'memdump' set to None
+    try:  # this occurs when another exception happened before, letting 'memdump' set to None
+        memdump.clean()
     except AttributeError:
         pass
 
@@ -56,43 +55,30 @@ def list_of(dumpers):
 
 if __name__ == '__main__':
     global memdump
-    parser.add_argument("dump", type=file_exists, help="memory dump file path")
+    parser.add_argument("dump", type=ts.file_exists, help="memory dump file path")
     dumpers = parser.add_argument_group("application/system dumpers")
-    appl = '\n'.join(two_columns(["  [{}] {}".format(i, a) for i, a in \
-                                  enumerate(APPDUMPERS)]))
-    sysl = '\n'.join(two_columns(["  [{}] {}".format(i, g) for i, g in \
-                                  enumerate(SYSDUMPERS)]))
-    dumpers.add_argument("-a", dest="apps", default="all",
-                         type=list_of(APPDUMPERS),
-                         help="comma-separated list of integers designating "
-                              "applications to be parsed\n Currently supported:"
-                              " \n{}\n".format(appl))
-    dumpers.add_argument("-s", dest="syst", default="none",
-                         type=list_of(SYSDUMPERS),
-                         help="comma-separated list of integers designating "
-                              "system items to be parsed\n Currently supported:"
-                              " \n{}\n".format(sysl))
+    appl = '\n'.join(two_columns(["  [{}] {}".format(i, a) for i, a in enumerate(APPDUMPERS)]))
+    sysl = '\n'.join(two_columns(["  [{}] {}".format(i, g) for i, g in enumerate(SYSDUMPERS)]))
+    dumpers.add_argument("-a", dest="apps", default="all", type=list_of(APPDUMPERS), help="comma-separated list of "
+                         "integers designating applications to be parsed\n Currently supported: \n{}\n".format(appl))
+    dumpers.add_argument("-s", dest="syst", default="none", type=list_of(SYSDUMPERS), help="comma-separated list of "
+                         "integers designating system items to be parsed\n Currently supported: \n{}\n".format(sysl))
     vol = parser.add_argument_group("volatility options")
     vol.add_argument("-f", "--force", dest="force", action="store_true",
                      help="force profile search, do not use cached profile")
-    vol.add_argument("-p", "--plugins-dir", dest="plugins", type=folder_exists,
-                     help="path to custom plugins")
-    vol.add_argument("--profile", help="force Volatility profile",
-                     note="has the precedence on -f/--force")
+    vol.add_argument("-p", "--plugins-dir", dest="plugins", type=ts.folder_exists, help="path to custom plugins")
+    vol.add_argument("--profile", help="force Volatility profile", note="has the precedence on -f/--force")
     others = parser.add_argument_group("output options")
-    others.add_argument("-d", "--dump-dir", dest="dump_dir", default="files",
-                        help="dump directory")
+    others.add_argument("-d", "--dump-dir", dest="dump_dir", default="files", help="dump directory")
     others.add_argument("-t", "--temp-dir", dest="temp_dir", default=".temp",
                         help="temporary directory for decompressed images")
-    others.add_argument("-u", "--update", action="store_true",
-                        help="update previous dump directories")
+    others.add_argument("-u", "--update", action="store_true", help="update previous dump directories")
     initialize()
     if len(args.apps) == 0 and len(args.syst) == 0:
         logger.warning("No dumper selected")
         sys.exit(0)
-    sys.argv = sys.argv[:1]  # remove arguments for avoiding passing them to the
-                             #  Volatility API (e.g. -p will cause a clash with
-                             #  the PID option of Volatility)
+    sys.argv = sys.argv[:1]  # remove arguments for avoiding passing them to the Volatility API (e.g. -p will cause a
+                             #  clash with the PID option of Volatility)
     for l in ['pyunpack', 'easyprocess', 'volatility.debug']:
         logging.getLogger(l).setLevel(51)
     # running the main stuff
@@ -103,11 +89,10 @@ if __name__ == '__main__':
             continue
         dump_dir = os.path.join(args.dump_dir, os.path.basename(dump))
         try:
-            memdump = VolatilityMemDump(dump, args.apps, args.syst, dump_dir,
-                                        args.plugins, args.profile, from_cache)
+            memdump = VolatilityMemDump(dump, args.apps, args.syst, dump_dir, args.plugins, args.profile, from_cache)
             memdump.dump(args.update)
         except ValueError as e:
             logger.critical(e)
-        # if archive, assume that every other dump has the same profile as
-        #  the first one in order to spare time
+        # if archive, assume that every other dump has the same profile as the first one in order to spare time
         from_cache = True
+
