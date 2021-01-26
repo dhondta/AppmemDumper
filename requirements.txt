@@ -1,3 +1,0 @@
-patool
-pyunpack
-tinyscript>=1.23.16
