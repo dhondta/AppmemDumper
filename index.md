@@ -1,5 +1,5 @@
 ---
-title: Steganography tools
+title: AppMemDumper
 layout: page
 use-site-title: false
 ---
@@ -44,7 +44,7 @@ $ pip install appmemdumper
 
 1. Help
 
-```sh
+ ```sh
 $ app-mem-dumper --help
 AppMemDumper 2.4.3
 Author   : Alexandre D'Hondt
@@ -120,11 +120,11 @@ Usage examples:
   ./app-mem-dumper dump.mem -a 0,3,10,11 -s 0
   ./app-mem-dumper dump.raw -v --profile Win7SP1x86
 
-```
+ ```
  
 2. Example of output
 
-```sh
+ ```sh
 $ app-mem-dumper memory.dump -v -p plugins
 [appmemdumper] XX:XX:XX [DEBUG] Attempting to decompress 'memory.dump'...
 [appmemdumper] XX:XX:XX [DEBUG] Not an archive, continuing...
@@ -153,5 +153,5 @@ Follow this procedure:
 3. Set another color palette than 'RVB'
 Restart this procedure by setting other parameters for width|height|palette.
 
-```
+ ```
 
