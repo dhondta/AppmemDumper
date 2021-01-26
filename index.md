@@ -14,7 +14,7 @@ use-site-title: false
 
 ## Introduction
 
-This tool automates the research of some artifacts for forensics purpose in memory dumps based upon [Volatility](https://github.com/volatilityfoundation/volatility/) for a series of common Windows applications. It is aimed to facilitate triage while addressing multiple forensics images.
+This tool automates the research of some artifacts for forensics purpose in memory dumps based upon [Volatility](https://github.com/volatilityfoundation/volatility) for a series of common Windows applications. It is aimed to facilitate triage while addressing multiple forensics images.
 
 It can also open multiple archive formats. In case of an archive, the tool will extract all its files to a temporary directory and then try to open each file as a memory dump (except files named `README` or `README.md`).
 
