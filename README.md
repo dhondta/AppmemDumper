@@ -9,7 +9,7 @@
 
 ## Introduction
 
-This tool automates the research of some artifacts for forensics purpose in memory dumps based upon Volatility for a series of common Windows applications. It is aimed to facilitate triage while addressing multiple forensics images.
+This tool automates the research of some artifacts for forensics purpose in memory dumps based upon [Volatility](https://github.com/volatilityfoundation/volatility/) for a series of common Windows applications. It is aimed to facilitate triage while addressing multiple forensics images.
 
 It can also open multiple archive formats. In case of an archive, the tool will extract all its files to a temporary directory and then try to open each file as a memory dump (except files named `README` or `README.md`).
 
@@ -18,7 +18,7 @@ It can also open multiple archive formats. In case of an archive, the tool will 
 
 This framework was tested on an Ubuntu 18.04 with Python 2.7. It relies on Foremost and Volatility
 
-```session
+```sh
 $ sudo apt-get install foremost
 $ git clone https://github.com/volatilityfoundation/volatility /tmp/vol-setup
 $ cd /tmp/vol-setup && sudo python setup.py install
@@ -26,7 +26,7 @@ $ cd /tmp/vol-setup && sudo python setup.py install
 
 ## Setup
 
-```session
+```sh
 $ pip install appmemdumper
 ```
 
@@ -39,7 +39,7 @@ $ pip install appmemdumper
 
 1. Help
 
- ```session
+ ```sh
 $ app-mem-dumper --help
 AppMemDumper 2.4.3
 Author   : Alexandre D'Hondt
@@ -119,7 +119,7 @@ Usage examples:
  
 2. Example of output
 
-```session
+ ```sh
 $ app-mem-dumper memory.dump -v -p plugins
 [appmemdumper] XX:XX:XX [DEBUG] Attempting to decompress 'memory.dump'...
 [appmemdumper] XX:XX:XX [DEBUG] Not an archive, continuing...
@@ -148,5 +148,5 @@ Follow this procedure:
 3. Set another color palette than 'RVB'
 Restart this procedure by setting other parameters for width|height|palette.
 
-```
+ ```
 
