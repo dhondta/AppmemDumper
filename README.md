@@ -1,8 +1,6 @@
 [![PyPi](https://img.shields.io/pypi/v/appmemdumper.svg)](https://pypi.python.org/pypi/appmemdumper/)
-[![Build Status](https://travis-ci.com/dhondta/AppmemDumper.svg?branch=master)](https://travis-ci.com/dhondta/AppmemDumper)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.804958.svg)](https://doi.org/10.5281/zenodo.804958)
 [![Python Versions](https://img.shields.io/pypi/pyversions/appmemdumper.svg)](https://pypi.python.org/pypi/appmemdumper/)
-[![Requirements Status](https://requires.io/github/dhondta/AppmemDumper/requirements.svg?branch=master)](https://requires.io/github/dhondta/AppmemDumper/requirements/?branch=master)
 [![Known Vulnerabilities](https://snyk.io/test/github/dhondta/AppmemDumper/badge.svg?targetFile=requirements.txt)](https://snyk.io/test/github/dhondta/AppmemDumper?targetFile=requirements.txt)
 [![License](https://img.shields.io/pypi/l/appmemdumper.svg)](https://pypi.python.org/pypi/appmemdumper/)
 
